@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+/* ============================================
+   SitePilot — Pallet Ross Design System
+   ============================================ */
+
+:root {
+  /* Backgrounds */
+  --bg-light: #F5F5F5;
+  --bg-dark: #EBEBEB;
+  --bg-white: #FFFFFF;
+
+  /* Text */
+  --text-primary: #0D0D0D;
+  --text-secondary: #444444;
+  --text-muted: #888888;
+
+  /* Accent */
+  --accent-red: #8B1A1A;
+  --tag-coral: #E8533A;
+  --tag-teal: #3A9E8A;
+
+  /* Buttons */
+  --btn-primary-bg: #111111;
+  --btn-primary-text: #FFFFFF;
+  --btn-secondary-border: #CCCCCC;
+
+  /* Borders */
+  --border-light: #E0E0E0;
+
+  /* Shadows */
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.15);
+  --shadow-tag: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  /* Border Radius */
+  --radius-card: 16px;
+  --radius-btn: 50px;
+  --radius-tag: 20px;
+
+  /* Typography */
+  --font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --font-hero: clamp(48px, 6vw, 72px);
+  --font-body: 15px;
+  --font-label: 12px;
+}
+
+@theme inline {
+  /* Colors */
+  --color-bg-light: #F5F5F5;
+  --color-bg-dark: #EBEBEB;
+  --color-bg-white: #FFFFFF;
+  --color-text-primary: #0D0D0D;
+  --color-text-secondary: #444444;
+  --color-text-muted: #888888;
+  --color-accent-red: #8B1A1A;
+  --color-tag-coral: #E8533A;
+  --color-tag-teal: #3A9E8A;
+  --color-btn-primary: #111111;
+  --color-btn-primary-text: #FFFFFF;
+  --color-btn-secondary-border: #CCCCCC;
+  --color-border-light: #E0E0E0;
+
+  /* Font family */
+  --font-sans: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+
+  /* Shadows */
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.15);
+  --shadow-tag: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 50px;
+}
+
+/* Base styles */
+body {
+  background: var(--bg-light);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+/* Focus ring utility */
+.focus-ring {
+  @apply outline-none ring-2 ring-accent-red/30 ring-offset-2;
+}
