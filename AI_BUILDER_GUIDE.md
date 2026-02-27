@@ -1,143 +1,117 @@
 # AI Website Builder Feature - Setup Guide
 
 ## Overview
-You've successfully implemented an AI-powered website builder that uses Google's Gemini API to automatically generate website layouts based on user descriptions.
+This feature adds an AI‑powered website builder that uses the **Grok (X) API** to automatically generate page layouts from a plain‑language description.
 
 ## What Was Implemented
 
-### 1. **Gemini API Integration** (`lib/gemini.ts`)
-- Google Generative AI client initialization
-- System and user prompt builders for website generation
-- Cost calculation based on token usage
-- Component generation function
+### 1. **Grok API Integration** (`lib/grok.ts`)
+- Simple fetch-based client calling X’s Grok endpoint
+- System & user prompt builders (identical logic to prior Gemini prompts)
+- Cost estimation helper
+- Component parsing from model output
 
-### 2. **API Endpoint** (`app/api/ai/generate-with-gemini/route.ts`)
-- Handles AI generation requests
-- Validates user permissions and AI credits
-- Integrates with Supabase for component storage
-- Logs AI usage for billing purposes
+### 2. **API Endpoint** (`app/api/ai/generate-with-grok/route.ts`)
+- Handles POST requests from the builder UI
+- Validates user permissions and monthly AI credits
+- Calls Grok and inserts returned components into the database
+- Logs usage/errors for billing and debugging
 
 ### 3. **AI Builder Modal Component** (`components/organisms/AIBuilderModal/AIBuilderModal.tsx`)
-- Beautiful modal UI for website description input
-- Example prompts for user guidance
-- Real-time character count
-- Error handling and user feedback
+- Modal UI where the user describes their website
+- Example prompts and character counter
+- Shows loading/spinner state and error messages
 
 ### 4. **Custom Hook** (`hooks/use-ai-builder.ts`)
-- Simple API to trigger AI generation
-- State management for loading and errors
-- Callbacks for success/error handling
+- Wraps the API call in a React hook
+- Provides loading/error state and success callbacks
 
 ### 5. **Builder Page Integration**
-- "AI Builder" button in the toolbar
-- Modal integration for seamless UX
-- Auto-refreshes components after generation
+- Adds "AI Builder" button to toolbar
+- Opens modal and refreshes page components on success
 
 ## Required Setup
 
 ### 1. Environment Variables
-Add to your `.env.local`:
+Add this to your `.env.local` or Vercel project settings:
 ```
-GEMINI_API_KEY=your_gemini_api_key_here
+GROK_API_KEY=your_grok_api_key_here
 ```
 
-To get a Gemini API key:
-1. Go to [Google AI Studio](https://ai.google.dev/tutorials/setup)
-2. Create a new API key
-3. Copy and paste it into your `.env.local`
+> You obtain a Grok key from X (visit https://developer.x.com/docs/grok or the Grok docs).
 
 ### 2. Install Dependencies
-✅ Already installed: `@google/generative-ai`
+- No new packages required; the feature uses the built-in `fetch` API (previously Google SDK removed).
 
 ## How It Works
 
 ### User Flow:
-1. User clicks "AI Builder" button in the builder toolbar
-2. Modal opens with description input and example prompts
-3. User describes their website (e.g., "A SaaS landing page for a project management tool")
-4. User clicks "Generate Website"
-5. Gemini AI processes the description
-6. Auto-generated components are inserted into the page
-7. User can edit, rearrange, or delete components as needed
+1. Click the **AI Builder** button in the page editor
+2. Enter a website description (e.g. “A restaurant site with menu and reservations”)
+3. Hit **Generate Website**
+4. Grok processes the request and returns JSON components
+5. Components are inserted into the page and shown in preview
+6. User can tweak, reorder, or delete them as desired
 
-### AI Generation Flow:
-1. User description sent to Gemini API
-2. Gemini processes with detailed system prompt
-3. Returns JSON array of components
-4. Components inserted into database with proper ordering
-5. UI updates automatically with generated sections
+### AI Flow:
+1. Generate system+user prompt via helper functions
+2. Send POST to `https://api.grok.com/v1/generate` with model `grok-1`
+3. Parse JSON array from the response text
+4. Store components in Supabase, log usage
 
-## Generated Component Types
-The AI can generate:
-- Navbar (with branding and navigation)
-- Hero section (with headings and CTAs)
-- Features (with icons and descriptions)
-- Image + Text sections
-- Testimonials
-- Team members
-- Statistics/stats
-- Call-to-action sections
-- Pricing tables
-- Contact forms
-- FAQ sections
-- Video embeds
-- Footer
+## Components the AI May Produce
+- `navbar` (branding & links)
+- `hero` with CTAs
+- `features` grid
+- `rich_text` sections
+- `image_text`, `gallery`, `testimonials`, `team`, `stats`
+- `cta`, `pricing`, `contact_form`, `faq`, `video_embed`, `footer`
 
-## Features Included
+## Features at a Glance
 
-✅ User-friendly modal UI
+✅ Friendly modal input UI
 ✅ Example prompts for inspiration
-✅ AI credit tracking (uses existing plan system)
-✅ Error handling and validation
-✅ Token usage logging for billing
-✅ Proper component ordering with fractional indexing
-✅ Permission-based access (requires 'use_ai' permission)
+✅ Monthly AI credit enforcement
+✅ Token‑based cost estimates
+✅ Logging for diagnostics & billing
+✅ Seamless builder integration
+✅ Permission check (`use_ai` role required)
 
 ## Cost Estimation
 
-Gemini 2.0 Flash pricing (as of Feb 2026):
-- Input: $0.075 per 1M tokens
-- Output: $0.3 per 1M tokens
+Estimated token pricing:
+- Input: ~$0.05 per 1M tokens
+- Output: ~$0.20 per 1M tokens
 
-One typical website generation: ~0.01-0.05 USD per generation
+Typical generation is ~$0.01–0.05 USD.
 
 ## Testing
-
-To test the feature:
-1. Ensure GEMINI_API_KEY is set
-2. Go to builder page for any website
-3. Click "AI Builder" button
-4. Enter a website description
-5. Click "Generate Website"
-6. Components should appear in the preview
+1. Ensure `GROK_API_KEY` is set.
+2. Open the builder for a website.
+3. Click **AI Builder**, describe your site, and generate.
+4. Verify components appear and the preview updates.
 
 ## Troubleshooting
 
-### "Gemini generation failed"
-- Check GEMINI_API_KEY is set correctly
-- Verify API key has access to generative AI models
-- Check network connectivity
+### API returns 429 quota error
+- Your Grok project has exhausted its free‑tier limits.
+- Upgrade or wait until limits reset (~1 minute).
+- See https://ai.dev/rate-limit for details.
 
-### "You have used all X AI credits"
-- User plan limit reached for the month
-- Credits reset on the 1st of each month
-- User can upgrade plan for more credits
+### API returns config error
+- Make sure `GROK_API_KEY` is correct and unrestricted.
+- Check that the Grok API is enabled on your X account.
 
-### Components not appearing
-- Check browser console for errors
-- Verify page has been selected
-- Try refreshing the page
+### Components don’t show up
+- Inspect server logs for errors (see new `console.log` messages).
+- Confirm you selected the correct page before generating.
 
 ## Future Enhancements
-
-Possible improvements:
-- Add AI-powered content editing suggestions
-- Image generation for hero/gallery sections
-- A/B testing different layouts
-- Save and load AI-generated templates
-- Batch component generation
-- Custom style/color scheme selection
+- Add AI suggestions for editing existing pages
+- Support image generation for hero/gallery blocks
+- Allow selecting color themes/style during generation
+- Provide template library from AI results
 
 ---
 
-**Ready to use!** Just set your GEMINI_API_KEY and start building with AI.
+**Ready to go!** Add your `GROK_API_KEY` and start building with Grok.

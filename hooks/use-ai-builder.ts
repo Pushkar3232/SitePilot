@@ -22,7 +22,7 @@ export function useAIBuilder(options?: UseAIBuilderOptions) {
           components: Array<any>;
           tokensUsed: any;
           estimatedCost: number;
-        }>('/api/ai/generate-with-gemini', {
+        }>('/api/ai/generate-with-grok', {
           method: 'POST',
           body: {
             websiteId,
