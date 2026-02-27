@@ -1,19 +1,44 @@
 // lib/stripe.ts
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing STRIPE_SECRET_KEY environment variable');
+let stripeInstance: Stripe | null = null;
+
+function getStripe(): Stripe {
+  if (!stripeInstance) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('Missing STRIPE_SECRET_KEY environment variable');
+    }
+    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
+  }
+  return stripeInstance;
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+export const stripe = {
+  customers: {
+    create: async (...args: any[]) => getStripe().customers.create(...args),
+  },
+  checkout: {
+    sessions: {
+      create: async (...args: any[]) => getStripe().checkout.sessions.create(...args),
+    },
+  },
+  billingPortal: {
+    sessions: {
+      create: async (...args: any[]) => getStripe().billingPortal.sessions.create(...args),
+    },
+  },
+  webhooks: {
+    constructEvent: (body: any, sig: any, secret: any) => getStripe().webhooks.constructEvent(body, sig, secret),
+  },
+} as unknown as Stripe;
 
-export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!;
+export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 /**
  * Create a Stripe customer for a new tenant
  */
 export async function createStripeCustomer(email: string, name: string): Promise<string> {
-  const customer = await stripe.customers.create({
+  const customer = await getStripe().customers.create({
     email,
     name,
     metadata: {
@@ -32,7 +57,7 @@ export async function createCheckoutSession(
   successUrl: string,
   cancelUrl: string
 ): Promise<string> {
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     customer: customerId,
     payment_method_types: ['card'],
     line_items: [
@@ -57,7 +82,7 @@ export async function createPortalSession(
   customerId: string,
   returnUrl: string
 ): Promise<string> {
-  const session = await stripe.billingPortal.sessions.create({
+  const session = await getStripe().billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,
   });
@@ -72,5 +97,5 @@ export function verifyWebhookSignature(
   body: string,
   signature: string
 ): Stripe.Event {
-  return stripe.webhooks.constructEvent(body, signature, STRIPE_WEBHOOK_SECRET);
+  return getStripe().webhooks.constructEvent(body, signature, STRIPE_WEBHOOK_SECRET);
 }
