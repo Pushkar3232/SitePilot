@@ -79,9 +79,7 @@ export async function POST(req: NextRequest) {
 
     // Parse request body
     const body = await req.json();
-    const { websiteId, title, slug, is_home, is_homepage } = body;
-    // Support both is_home and is_homepage for backwards compatibility
-    const isHomePage = is_home === true || is_homepage === true;
+    const { websiteId, title, slug, is_homepage } = body;
 
     // Validate input
     if (!websiteId) {
@@ -158,7 +156,7 @@ export async function POST(req: NextRequest) {
         title: title.trim(),
         slug,
         status: 'draft',
-        is_home: isHomePage,
+        is_homepage: is_homepage === true,
       })
       .select()
       .single();

@@ -107,7 +107,7 @@ export interface Page {
   title: string;
   slug: string;
   status: 'draft' | 'published' | 'hidden';
-  is_home: boolean;
+  is_homepage: boolean;
   show_in_nav: boolean;
   nav_order: number;
   nav_label: string | null;

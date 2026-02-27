@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
         title: 'Home',
         slug: '/',
         status: 'draft',
-        is_home: true,
+        is_homepage: true,
       })
       .select()
       .single();

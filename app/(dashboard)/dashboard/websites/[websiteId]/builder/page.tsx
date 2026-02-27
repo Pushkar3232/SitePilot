@@ -335,7 +335,7 @@ export default function BuilderPage({ params }: BuilderPageProps) {
   // Auto-select first (home) page
   useEffect(() => {
     if (pages.length > 0 && !selectedPageId) {
-      const homePage = pages.find((p: { is_home: boolean }) => p.is_home) ?? pages[0];
+      const homePage = pages.find((p: { is_homepage: boolean }) => p.is_homepage) ?? pages[0];
       setSelectedPageId((homePage as { id: string }).id);
     }
   }, [pages, selectedPageId]);
@@ -347,7 +347,7 @@ export default function BuilderPage({ params }: BuilderPageProps) {
       setCreatingPage(true);
       apiFetch("/api/pages", {
         method: "POST",
-        body: { websiteId, title: "Home", slug: "/", status: "draft", is_home: true },
+        body: { websiteId, title: "Home", slug: "/", status: "draft", is_homepage: true },
       })
         .then(() => refetchWebsite())
         .catch(() => { /* ignore */ })
@@ -485,9 +485,9 @@ export default function BuilderPage({ params }: BuilderPageProps) {
               value={selectedPageId ?? ""}
               onChange={(e) => { setSelectedPageId(e.target.value); setSelectedBlock(null); }}
             >
-              {pages.map((page: { id: string; title: string; is_home: boolean }) => (
+              {pages.map((page: { id: string; title: string; is_homepage: boolean }) => (
                 <option key={page.id} value={page.id}>
-                  {page.title}{page.is_home ? " (Home)" : ""}
+                  {page.title}{page.is_homepage ? " (Home)" : ""}
                 </option>
               ))}
             </select>
