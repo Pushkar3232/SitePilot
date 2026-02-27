@@ -21,7 +21,7 @@ const features = [
   {
     icon: <Globe className="h-6 w-6" />,
     title: "Custom Domains",
-    description: "Connect your own domain or use a free .sitepilot.io subdomain.",
+    description: "Connect your own domain or use a free subdomain at sitepilot.pushkarshinde.in.",
   },
   {
     icon: <Palette className="h-6 w-6" />,

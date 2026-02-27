@@ -43,7 +43,8 @@ export async function middleware(request: NextRequest) {
   const pathname = url.pathname;
 
   // Extract subdomain
-  // Production: <subdomain>.sitepilot.io
+  // Production: <subdomain>.sitepilot.pushkarshinde.in
+  // Base app:  sitepilot.pushkarshinde.in
   // Dev:        <subdomain>.localhost:3000
   // Vercel:     site-pilot-alpha.vercel.app (should NOT be treated as subdomain)
   let subdomain = "";
@@ -51,10 +52,10 @@ export async function middleware(request: NextRequest) {
   // Only process subdomains for known domains (sitepilot.pushkarshinde.in and localhost)
   if (hostname.includes("sitepilot.pushkarshinde.in")) {
     const parts = hostname.split(".sitepilot.pushkarshinde.in");
-    subdomain = parts[0]; // e.g. "beans-cafe" from "beans-cafe.sitepilot.pushkarshinde.in"
+    subdomain = parts[0] || ""; // e.g. "beans-cafe" from "beans-cafe.sitepilot.pushkarshinde.in", or "" for base domain
   } else if (hostname.includes("localhost")) {
     const parts = hostname.split(".");
-    subdomain = parts[0]; // e.g. "beans-cafe" from "beans-cafe.localhost:3000"
+    subdomain = parts[0] || ""; // e.g. "beans-cafe" from "beans-cafe.localhost:3000"
   }
   // For Vercel domains (vercel.app, other domains), don't extract subdomain
 
@@ -65,7 +66,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  // For main app domain, handle authentication
+  // For main app domain (including base domain), handle authentication
   if (!subdomain || APP_SUBDOMAINS.has(subdomain)) {
     try {
       // Check if user is accessing protected routes
