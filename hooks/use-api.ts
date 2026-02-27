@@ -212,7 +212,7 @@ interface WebsiteDetailResponse {
       id: string;
       title: string;
       slug: string;
-      is_homepage: boolean;
+      is_home: boolean;
       status: string;
       nav_order?: number;
       seo_meta?: Record<string, unknown>;
@@ -272,7 +272,7 @@ interface PagesListResponse {
     id: string;
     title: string;
     slug: string;
-    is_homepage: boolean;
+    is_home: boolean;
     status: string;
     nav_order?: number;
     seo_meta?: Record<string, unknown>;

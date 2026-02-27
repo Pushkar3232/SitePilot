@@ -30,11 +30,11 @@ async function getSiteData(subdomain: string, slug: string) {
   // Find the page matching the slug (or homepage)
   let pageQuery = supabaseServer
     .from("pages")
-    .select("id, title, slug, is_homepage")
+    .select("id, title, slug, is_home")
     .eq("website_id", website.id);
 
   if (slug === "/") {
-    pageQuery = pageQuery.eq("is_homepage", true);
+    pageQuery = pageQuery.eq("is_home", true);
   } else {
     pageQuery = pageQuery.eq("slug", slug);
   }

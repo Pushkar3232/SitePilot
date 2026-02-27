@@ -232,7 +232,7 @@ export default function WebsiteDetailPage({ params }: WebsiteDetailPageProps) {
                         <div>
                           <p className="text-sm font-medium text-text-primary">
                             {page.title}
-                            {page.is_homepage && (
+                            {page.is_home && (
                               <span className="ml-2"><Badge variant="info" size="sm">
                                 Home
                               </Badge></span>
@@ -248,7 +248,7 @@ export default function WebsiteDetailPage({ params }: WebsiteDetailPageProps) {
                         >
                           {page.status === "published" ? "Published" : "Draft"}
                         </Badge>
-                        {!page.is_homepage && (
+                        {!page.is_home && (
                           <button
                             onClick={() => setDeletingPageId(page.id)}
                             className="p-1.5 text-text-muted hover:text-red-600 rounded-lg hover:bg-bg-light transition-colors"

@@ -3,7 +3,7 @@ export interface Page {
   website_id: string;
   title: string;
   slug: string;
-  is_homepage: boolean;
+  is_home: boolean;
   seo_title?: string;
   seo_description?: string;
   sort_order: string; // fractional index
