@@ -24,14 +24,14 @@ export default function BillingPage() {
     },
   });
 
-  const currentPlanId = plansData?.currentPlan?.id ?? plansData?.current_plan_id;
+  const currentPlanId = plansData?.currentPlanId ?? plansData?.currentPlan;
   const currentPlan = PLANS.find((p) => p.id === currentPlanId) ?? PLANS[0];
 
   // Usage values from API or fallback to 0
-  const usage = plansData?.usage ?? { websites: 0, pages: 0, storage: 0, aiCredits: 0 };
+  const usage = { websites: 0, pages: 0, storage: 0, aiCredits: 0 };
 
   const handlePlanAction = (planId: string) => {
-    createCheckout({ plan_id: planId });
+    createCheckout({ planId, billingInterval: 'monthly' });
   };
 
   return (
@@ -157,7 +157,7 @@ export default function BillingPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => createPortal({})}
+              onClick={() => createPortal()}
               isLoading={portalLoading}
             >
               Open Portal

@@ -51,12 +51,12 @@ export default function BrandingPage() {
 
   useEffect(() => {
     const w = websites?.find((ws: any) => ws.id === selectedWebsiteId);
-    const b = w?.branding_config ?? {};
-    setPrimary(b.primary_color ?? DEFAULT_BRANDING.primary_color);
-    setSecondary(b.secondary_color ?? DEFAULT_BRANDING.secondary_color);
-    setAccent(b.accent_color ?? DEFAULT_BRANDING.accent_color);
-    setHeadingFont(b.heading_font ?? DEFAULT_BRANDING.heading_font);
-    setBodyFont(b.body_font ?? DEFAULT_BRANDING.body_font);
+    const b = w?.branding_config as any ?? {};
+    setPrimary((b?.primary_color as string) ?? DEFAULT_BRANDING.primary_color);
+    setSecondary((b?.secondary_color as string) ?? DEFAULT_BRANDING.secondary_color);
+    setAccent((b?.accent_color as string) ?? DEFAULT_BRANDING.accent_color);
+    setHeadingFont((b?.heading_font as string) ?? DEFAULT_BRANDING.heading_font);
+    setBodyFont((b?.body_font as string) ?? DEFAULT_BRANDING.body_font);
   }, [selectedWebsiteId, websites]);
 
   const handleSave = async () => {

@@ -125,7 +125,9 @@ export default function AuthCallbackPage() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <Spinner className="h-8 w-8 mx-auto mb-4" />
+        <div className="h-8 w-8 mx-auto mb-4">
+          <Spinner size="lg" />
+        </div>
         <p className="text-sm text-gray-600">Processing authentication...</p>
       </div>
     </div>

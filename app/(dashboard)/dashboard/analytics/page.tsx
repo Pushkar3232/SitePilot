@@ -18,19 +18,16 @@ export default function AnalyticsPage() {
   const [days, setDays] = useState(30);
   const { data, loading, error, refetch } = useAnalyticsDashboardApi(days);
 
-  const summary = data?.summary;
-  const topPages = data?.pageViews?.topPages ?? [];
-  const referrers = data?.pageViews?.referrers ?? [];
   const chartData = data?.pageViews?.chartData ?? [];
+  const topPages: any[] = [];
+  const referrers: any[] = [];
 
-  const overviewStats = summary
-    ? [
-        { label: "Page Views", value: summary.totalPageViews?.toLocaleString() ?? "0", icon: <Eye className="h-5 w-5" /> },
-        { label: "Unique Visitors", value: summary.uniqueVisitors?.toLocaleString() ?? "0", icon: <BarChart3 className="h-5 w-5" /> },
-        { label: "Avg. Session", value: summary.avgSessionDuration ?? "—", icon: <MousePointerClick className="h-5 w-5" /> },
-        { label: "Bounce Rate", value: summary.bounceRate != null ? `${summary.bounceRate}%` : "—", icon: <TrendingUp className="h-5 w-5" /> },
-      ]
-    : [];
+  const overviewStats = [
+    { label: "Page Views", value: (data?.pageViews?.total ?? 0).toLocaleString(), icon: <Eye className="h-5 w-5" /> },
+    { label: "Unique Visitors", value: "0", icon: <BarChart3 className="h-5 w-5" /> },
+    { label: "Avg. Session", value: "—", icon: <MousePointerClick className="h-5 w-5" /> },
+    { label: "Bounce Rate", value: "—", icon: <TrendingUp className="h-5 w-5" /> },
+  ];
 
   const maxPageViews = topPages.length > 0 ? Math.max(...topPages.map((p: any) => p.views ?? 0), 1) : 1;
 
@@ -107,7 +104,7 @@ export default function AnalyticsPage() {
                 return (
                   <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full">
                     <div
-                      className="w-full bg-accent-red rounded-t-sm min-h-[2px] transition-all"
+                      className="w-full bg-accent-red rounded-t-sm min-h-0.5 transition-all"
                       style={{ height: `${heightPct}%` }}
                       title={`${point.date ?? point.label}: ${val}`}
                     />

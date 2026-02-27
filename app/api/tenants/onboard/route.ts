@@ -194,6 +194,10 @@ export async function POST(req: NextRequest) {
       await supabaseServer.from('websites').delete().eq('id', website.id);
       await supabaseServer.from('users').delete().eq('id', user.id);
       await supabaseServer.from('tenants').delete().eq('id', newTenant.id);
+      console.error('Page creation error:', pageError);
+      return errorResponse('INTERNAL_ERROR', 'Failed to create page', 500);
+    }
+
     // 5. Create default components
     const defaultComponents = [
       {
