@@ -16,6 +16,7 @@ export interface Website {
   name: string;
   subdomain: string;
   custom_domain?: string;
+  domain_verified?: boolean;
   status: WebsiteStatus;
   branding_config: BrandingConfig;
   created_at: string;
