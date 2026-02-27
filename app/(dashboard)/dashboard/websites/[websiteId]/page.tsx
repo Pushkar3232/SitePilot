@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { use } from "react";
-import { Globe, Pencil, ExternalLink, ArrowLeft, Trash2, FileText, Eye, Plus } from "lucide-react";
+import { Globe, Pencil, ExternalLink, ArrowLeft, Trash2, FileText, Eye, Plus, Upload } from "lucide-react";
 import { DashboardTopbar } from "@/components/organisms/DashboardTopbar";
 import { Card } from "@/components/molecules/Card";
 import { Badge } from "@/components/atoms/Badge";
@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/atoms/Skeleton";
 import { Modal } from "@/components/molecules/Modal";
 import Input from "@/components/atoms/Input/Input";
 import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
-import { useWebsiteDetailApi, useDeleteWebsiteApi, useCreatePageApi } from "@/hooks/use-api";
+import { useWebsiteDetailApi, useDeleteWebsiteApi, useCreatePageApi, usePublishWebsiteApi } from "@/hooks/use-api";
 import { apiFetch } from "@/hooks/use-api";
 
 interface WebsiteDetailPageProps {
@@ -48,6 +48,12 @@ export default function WebsiteDetailPage({ params }: WebsiteDetailPageProps) {
       setShowCreatePageModal(false);
       setNewPageTitle("");
       setNewPageSlug("");
+      refetch();
+    },
+  });
+
+  const { mutate: publishWebsite, loading: publishing } = usePublishWebsiteApi(websiteId, {
+    onSuccess: () => {
       refetch();
     },
   });
@@ -172,6 +178,14 @@ export default function WebsiteDetailPage({ params }: WebsiteDetailPageProps) {
                   Open Builder
                 </Button>
               </Link>
+              <Button
+                variant={website.status === "published" ? "secondary" : "primary"}
+                leftIcon={<Upload className="h-4 w-4" />}
+                onClick={() => publishWebsite()}
+                isLoading={publishing}
+              >
+                {website.status === "published" ? "Republish" : "Publish"}
+              </Button>
               <Button
                 variant="secondary"
                 leftIcon={<ExternalLink className="h-4 w-4" />}

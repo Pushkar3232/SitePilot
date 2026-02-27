@@ -651,14 +651,13 @@ export default function BuilderPage({ params }: BuilderPageProps) {
         </header>
 
         {/* Canvas */}
-        <div className="flex-1 overflow-auto p-6 flex justify-center bg-bg-dark/40">
+        <div className="flex-1 overflow-y-auto p-6 flex justify-center bg-bg-dark/40">
           <div
             className={cn(
-              "bg-white rounded-xl shadow-lg border border-border-light overflow-hidden transition-all duration-300 mx-auto",
+              "bg-white rounded-xl shadow-lg border border-border-light overflow-hidden transition-all duration-300 mx-auto w-full",
               viewportWidths[viewport],
               viewport !== "desktop" && "max-w-full"
             )}
-            style={{ minHeight: "600px" }}
           >
             {componentsLoading ? (
               <div className="p-6 space-y-4">
@@ -704,7 +703,7 @@ export default function BuilderPage({ params }: BuilderPageProps) {
                 </div>
               ))
             ) : (
-              <div className="flex flex-col items-center justify-center h-full py-24 gap-4 text-text-muted">
+              <div className="flex flex-col items-center justify-center min-h-40 gap-4 text-text-muted">
                 <LayoutGrid className="h-10 w-10 opacity-30" />
                 <div className="text-center">
                   <p className="text-sm font-medium">No blocks yet</p>
