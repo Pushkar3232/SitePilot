@@ -55,7 +55,7 @@ export default function WebsiteCard({
               {website.name}
             </h3>
             <p className="text-xs text-text-muted mt-0.5 truncate">
-              {website.subdomain}.sitepilot.io
+              {website.subdomain}.sitepilot.pushkarshinde.in
             </p>
           </div>
 
@@ -74,12 +74,22 @@ export default function WebsiteCard({
               {
                 label: "View Live",
                 icon: <Eye className="h-4 w-4" />,
-                onClick: () => window.open(`https://${website.subdomain}.sitepilot.io`, "_blank"),
+                onClick: () => {
+                  const liveUrl = website.custom_domain && website.domain_verified
+                    ? `https://${website.custom_domain}`
+                    : `https://${website.subdomain}.sitepilot.pushkarshinde.in`;
+                  window.open(liveUrl, "_blank");
+                },
               },
               {
                 label: "Copy URL",
                 icon: <Copy className="h-4 w-4" />,
-                onClick: () => navigator.clipboard.writeText(`https://${website.subdomain}.sitepilot.io`),
+                onClick: () => {
+                  const liveUrl = website.custom_domain && website.domain_verified
+                    ? `https://${website.custom_domain}`
+                    : `https://${website.subdomain}.sitepilot.pushkarshinde.in`;
+                  navigator.clipboard.writeText(liveUrl);
+                },
               },
               ...(canDelete
                 ? [

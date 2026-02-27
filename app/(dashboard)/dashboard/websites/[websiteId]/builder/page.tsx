@@ -633,7 +633,14 @@ export default function BuilderPage({ params }: BuilderPageProps) {
             )}
             <Button
               variant="secondary" size="sm" leftIcon={<Eye className="h-4 w-4" />}
-              onClick={() => { const sub = website?.subdomain; if (sub) window.open(`https://${sub}.sitepilot.io`, "_blank"); }}
+              onClick={() => {
+                if (website) {
+                  const liveUrl = website.custom_domain && website.domain_verified
+                    ? `https://${website.custom_domain}`
+                    : `https://${website.subdomain}.sitepilot.pushkarshinde.in`;
+                  window.open(liveUrl, "_blank");
+                }
+              }}
             >
               Preview
             </Button>

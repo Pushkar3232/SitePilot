@@ -159,7 +159,7 @@ export default function WebsiteDetailPage({ params }: WebsiteDetailPageProps) {
                   </Badge>
                 </div>
                 <p className="text-sm text-text-muted mt-0.5">
-                  {website.subdomain}.sitepilot.io
+                  {website.subdomain}.sitepilot.pushkarshinde.in
                   {website.custom_domain && ` · ${website.custom_domain}`}
                   {" · Updated "}
                   {formatDate(website.updated_at)}
@@ -179,7 +179,7 @@ export default function WebsiteDetailPage({ params }: WebsiteDetailPageProps) {
                   window.open(
                     website.custom_domain
                       ? `https://${website.custom_domain}`
-                      : `https://${website.subdomain}.sitepilot.io`,
+                      : `https://${website.subdomain}.sitepilot.pushkarshinde.in`,
                     "_blank"
                   )
                 }

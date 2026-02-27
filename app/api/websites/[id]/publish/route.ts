@@ -120,7 +120,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     // Build live URL
     const liveUrl = website.custom_domain && website.domain_verified
       ? `https://${website.custom_domain}`
-      : `https://${website.subdomain}.sitepilot.io`;
+      : `https://${website.subdomain}.sitepilot.pushkarshinde.in`;
 
     return jsonResponse({
       deployment: {

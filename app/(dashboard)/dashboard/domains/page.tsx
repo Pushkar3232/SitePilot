@@ -82,7 +82,7 @@ export default function DomainsPage() {
         <Alert
           variant="info"
           title="Custom Domains"
-          description="Custom domains allow visitors to access your websites on your own domain name. Point a CNAME record to cname.sitepilot.io to get started."
+          description="Custom domains allow visitors to access your websites on your own domain name. Point a CNAME record to cname.sitepilot.pushkarshinde.in to get started."
         />
 
         <div className="flex items-center justify-between">
@@ -160,7 +160,7 @@ export default function DomainsPage() {
           <div className="bg-bg-light rounded-lg p-4 text-xs font-mono text-text-secondary space-y-1">
             <p>Type: CNAME</p>
             <p>Name: www (or @)</p>
-            <p>Value: cname.sitepilot.io</p>
+            <p>Value: cname.sitepilot.pushkarshinde.in</p>
             <p>TTL: 3600</p>
           </div>
           <p className="text-xs text-text-muted mt-3">

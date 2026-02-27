@@ -48,10 +48,10 @@ export async function middleware(request: NextRequest) {
   // Vercel:     site-pilot-alpha.vercel.app (should NOT be treated as subdomain)
   let subdomain = "";
 
-  // Only process subdomains for known domains (sitepilot.io and localhost)
-  if (hostname.includes("sitepilot.io")) {
-    const parts = hostname.split(".sitepilot.io");
-    subdomain = parts[0]; // e.g. "beans-cafe" from "beans-cafe.sitepilot.io"
+  // Only process subdomains for known domains (sitepilot.pushkarshinde.in and localhost)
+  if (hostname.includes("sitepilot.pushkarshinde.in")) {
+    const parts = hostname.split(".sitepilot.pushkarshinde.in");
+    subdomain = parts[0]; // e.g. "beans-cafe" from "beans-cafe.sitepilot.pushkarshinde.in"
   } else if (hostname.includes("localhost")) {
     const parts = hostname.split(".");
     subdomain = parts[0]; // e.g. "beans-cafe" from "beans-cafe.localhost:3000"

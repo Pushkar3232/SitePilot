@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate CNAME target
-    const cnameTarget = `${website.subdomain}.sitepilot.io`;
+    const cnameTarget = `${website.subdomain}.sitepilot.pushkarshinde.in`;
 
     // Update website with custom domain
     const { error: updateError } = await supabaseServer

@@ -166,7 +166,7 @@ export default function DashboardOverviewPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-text-primary">{site.name}</p>
-                        <p className="text-xs text-text-muted">{site.subdomain}.sitepilot.io</p>
+                        <p className="text-xs text-text-muted">{site.subdomain}.sitepilot.pushkarshinde.in</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
