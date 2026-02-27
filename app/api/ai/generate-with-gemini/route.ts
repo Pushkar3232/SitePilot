@@ -150,7 +150,17 @@ export async function POST(req: NextRequest) {
         error_message: errorMsg,
       });
 
-      // Return more specific error message
+      // Handle quota error specifically
+      if (errorMsg.includes('429')) {
+        console.warn('⚠️ [AI] Quota exceeded for Gemini');
+        return errorResponse(
+          'AI_QUOTA_EXCEEDED',
+          'Gemini API quota exceeded. Please upgrade your Google Cloud project or try again later.',
+          429
+        );
+      }
+
+      // Other configuration errors
       if (errorMsg.includes('API key') || errorMsg.includes('GEMINI')) {
         return errorResponse(
           'CONFIGURATION_ERROR',
