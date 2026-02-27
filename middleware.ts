@@ -49,13 +49,21 @@ export async function middleware(request: NextRequest) {
   // Vercel:     site-pilot-alpha.vercel.app (should NOT be treated as subdomain)
   let subdomain = "";
 
-  // Only process subdomains for known domains (sitepilot.pushkarshinde.in and localhost)
+  // Only process subdomains for known domains
   if (hostname.includes("sitepilot.pushkarshinde.in")) {
-    const parts = hostname.split(".sitepilot.pushkarshinde.in");
-    subdomain = parts[0] || ""; // e.g. "beans-cafe" from "beans-cafe.sitepilot.pushkarshinde.in", or "" for base domain
+    // Remove port if present
+    const host = hostname.split(":")[0];
+    const domainSuffix = "sitepilot.pushkarshinde.in";
+    
+    if (host === domainSuffix) {
+      subdomain = ""; // Base domain - no subdomain
+    } else if (host.endsWith(`.${domainSuffix}`)) {
+      subdomain = host.substring(0, host.length - domainSuffix.length - 1); // e.g. "beans-cafe" from "beans-cafe.sitepilot.pushkarshinde.in"
+    }
   } else if (hostname.includes("localhost")) {
-    const parts = hostname.split(".");
-    subdomain = parts[0] || ""; // e.g. "beans-cafe" from "beans-cafe.localhost:3000"
+    const host = hostname.split(":")[0]; // Remove port
+    const parts = host.split(".");
+    subdomain = parts[0] || ""; // e.g. "beans-cafe" from "beans-cafe.localhost"
   }
   // For Vercel domains (vercel.app, other domains), don't extract subdomain
 
