@@ -12,6 +12,8 @@ import { cn } from "@/utils/cn";
 import { Button } from "@/components/atoms/Button";
 import { Badge } from "@/components/atoms/Badge";
 import { Skeleton } from "@/components/atoms/Skeleton";
+import { AIBuilderModal } from "@/components/organisms/AIBuilderModal/AIBuilderModal";
+import { useAIBuilder } from "@/hooks/use-ai-builder";
 import Link from "next/link";
 import {
   useWebsiteDetailApi,
@@ -430,7 +432,16 @@ export default function BuilderPage({ params }: BuilderPageProps) {
   const [creatingPage, setCreatingPage] = useState(false);
   const [draggedBlockId, setDraggedBlockId] = useState<string | null>(null);
   const [dragOverBlockId, setDragOverBlockId] = useState<string | null>(null);
+  const [aiModalOpen, setAiModalOpen] = useState(false);
   const autoCreatedRef = useRef(false);
+
+  // AI Builder hook
+  const { generateWebsite, loading: aiLoading } = useAIBuilder({
+    onSuccess: () => {
+      setAiModalOpen(false);
+      refetchComponents();
+    },
+  });
 
   // Fetch website detail for name and pages
   const { data: websiteData, loading: websiteLoading, refetch: refetchWebsite } = useWebsiteDetailApi(websiteId);
@@ -796,6 +807,14 @@ export default function BuilderPage({ params }: BuilderPageProps) {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button
+              variant="secondary" size="sm" leftIcon={<Sparkles className="h-4 w-4" />}
+              onClick={() => setAiModalOpen(true)}
+              disabled={!selectedPageId || aiLoading}
+              title="Generate website content with AI"
+            >
+              AI Builder
+            </Button>
             {isDirty && (
               <Button variant="ghost" size="sm" leftIcon={<Save className="h-4 w-4" />} onClick={handleSave} isLoading={isSaving}>
                 Save
@@ -1011,6 +1030,18 @@ export default function BuilderPage({ params }: BuilderPageProps) {
           )}
         </div>
       </aside>
+
+      {/* AI Builder Modal */}
+      <AIBuilderModal
+        isOpen={aiModalOpen}
+        onClose={() => setAiModalOpen(false)}
+        onGenerate={async (description) => {
+          if (!selectedPageId) return;
+          await generateWebsite(websiteId, selectedPageId, description);
+        }}
+        isLoading={aiLoading}
+        websiteName={website?.name ?? "Website"}
+      />
     </div>
   );
 }
