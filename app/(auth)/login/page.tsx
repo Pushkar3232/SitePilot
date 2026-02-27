@@ -8,6 +8,7 @@ import Input from "@/components/atoms/Input/Input";
 import { Button } from "@/components/atoms/Button";
 import { Divider } from "@/components/atoms/Divider";
 import { useAuthStore } from "@/store/auth.store";
+import { AuthService } from "@/lib/auth-client";
 import type { User } from "@/types/user.types";
 import type { Tenant } from "@/types/tenant.types";
 
@@ -25,19 +26,53 @@ export default function LoginPage() {
     setError("");
     setIsLoading(true);
 
-    // TODO: Firebase signInWithEmailAndPassword
     try {
-      await new Promise((r) => setTimeout(r, 1500));
-      // router.push("/dashboard");
-    } catch {
-      setError("Invalid email or password.");
+      console.log('Starting login process...');
+      const result = await AuthService.signIn({ email, password });
+      
+      console.log('Login result:', result);
+      
+      if (result.error) {
+        console.error('Login error:', result.error);
+        setError(result.error);
+        return;
+      }
+
+      if (result.user && result.userData) {
+        // Use real user and tenant data from the API
+        const userData = result.userData;
+        const tenantData = userData.tenants;
+        
+        console.log('Setting user data:', userData);
+        console.log('Setting tenant data:', tenantData);
+        
+        setUser(userData);
+        setTenant(tenantData);
+        
+        console.log('Login successful, redirecting to dashboard');
+        router.push("/dashboard");
+      } else {
+        console.error('Missing user data in response:', result);
+        setError("Failed to get user data. Please try again.");
+      }
+    } catch (error) {
+      console.error('Login exception:', error);
+      setError("Sign in failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    // TODO: Firebase signInWithPopup(auth, googleProvider)
+    try {
+      const result = await AuthService.signInWithGoogle();
+      if (result.error) {
+        setError(result.error);
+      }
+      // User will be redirected for Google OAuth
+    } catch (error) {
+      setError("Google sign in failed. Please try again.");
+    }
   };
 
   const handleDemoLogin = async () => {
@@ -46,10 +81,15 @@ export default function LoginPage() {
       // Set mock user and tenant data
       const mockUser: User = {
         id: "demo_user_123",
+        supabase_auth_id: "demo_supabase_auth_uid",
         email: "demo@example.com",
-        full_name: "Demo User",
+        display_name: "Demo User",
+        avatar_url: "https://ui-avatars.com/api/?name=Demo+User&background=6366f1&color=fff",
         role: "admin",
+        is_active: true,
+        last_login_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
 
       const mockTenant: Tenant = {
@@ -59,7 +99,9 @@ export default function LoginPage() {
         owner_id: "demo_user_123",
         plan_id: "plan_growth",
         onboarding_completed: true,
+        stripe_customer_id: "cus_demo123",
         created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
 
       // Store in Zustand

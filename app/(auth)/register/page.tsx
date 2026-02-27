@@ -1,14 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Mail, User, Building2 } from "lucide-react";
 import Input from "@/components/atoms/Input/Input";
 import { Button } from "@/components/atoms/Button";
 import { cn } from "@/utils/cn";
 import { PLANS } from "@/constants/plans";
+import { AuthService } from "@/lib/auth-client";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [orgName, setOrgName] = useState("");
   const [email, setEmail] = useState("");
@@ -18,10 +21,12 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
@@ -33,14 +38,35 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!fullName.trim() || !orgName.trim()) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // TODO: Firebase createUserWithEmailAndPassword
-      // TODO: POST /api/tenants/onboard
-      await new Promise((r) => setTimeout(r, 1500));
-      // router.push("/onboarding");
-    } catch {
+      const result = await AuthService.signUp({
+        email,
+        password,
+        fullName: fullName.trim(),
+        orgName: orgName.trim(),
+        selectedPlan
+      });
+      
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+
+      setSuccess("Account created successfully! Please check your email to verify your account.");
+      
+      // Wait a moment then redirect to login
+      setTimeout(() => {
+        router.push("/login?message=Please check your email to verify your account");
+      }, 2000);
+      
+    } catch (error) {
       setError("Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
@@ -60,6 +86,12 @@ export default function RegisterPage() {
         {error && (
           <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
             {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-sm text-green-700">
+            {success}
           </div>
         )}
 
