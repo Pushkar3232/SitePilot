@@ -46,6 +46,9 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     }
 
     // Build snapshot JSON
+    // Note: The database uses different field names:
+    // - components table: component_type (not type), content (not props), is_locked (not is_visible)
+    // - pages table: is_homepage (not is_home), seo_meta may not exist (use seo_title/seo_description)
     const snapshot = {
       websiteId: website.id,
       publishedAt: new Date().toISOString(),
@@ -53,20 +56,34 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       seoDefaults: website.seo_defaults,
       favicon: website.favicon_url,
       pages: website.pages
-        .filter((page: { status: string }) => page.status !== 'hidden')
-        .map((page: { id: string; title: string; slug: string; seo_meta: Record<string, unknown>; page_config: Record<string, unknown>; components: { type: string; props: Record<string, unknown>; is_visible: boolean; order_key: string }[] }) => ({
+        .filter((page: { status: string }) => page.status !== 'hidden' && page.status !== 'archived')
+        .map((page: { 
+          id: string; 
+          title: string; 
+          slug: string; 
+          seo_meta?: Record<string, unknown>; 
+          seo_title?: string;
+          seo_description?: string;
+          page_config?: Record<string, unknown>; 
+          components: { 
+            component_type: string; 
+            content: Record<string, unknown>; 
+            is_locked?: boolean; 
+            order_key: string 
+          }[] 
+        }) => ({
           id: page.id,
           title: page.title,
           slug: page.slug,
-          seo_meta: page.seo_meta,
-          page_config: page.page_config,
-          components: page.components
-            .filter((c: { is_visible: boolean }) => c.is_visible)
-            .sort((a: { order_key: string }, b: { order_key: string }) => a.order_key.localeCompare(b.order_key))
-            .map((c: { type: string; props: Record<string, unknown>; is_visible: boolean }) => ({
-              type: c.type,
-              props: c.props,
-              is_visible: c.is_visible,
+          seo_meta: page.seo_meta || { title: page.seo_title, description: page.seo_description },
+          page_config: page.page_config || {},
+          components: (page.components || [])
+            .filter((c: { is_locked?: boolean }) => !c.is_locked) // is_locked = false means visible
+            .sort((a: { order_key: string }, b: { order_key: string }) => (a.order_key || '').localeCompare(b.order_key || ''))
+            .map((c: { component_type: string; content: Record<string, unknown>; is_locked?: boolean }) => ({
+              type: c.component_type,    // Map component_type -> type
+              props: c.content || {},    // Map content -> props
+              is_visible: !c.is_locked,  // Map !is_locked -> is_visible
             })),
         })),
     };

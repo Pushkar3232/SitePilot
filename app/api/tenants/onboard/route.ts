@@ -182,7 +182,7 @@ export async function POST(req: NextRequest) {
         title: 'Home',
         slug: '/',
         status: 'draft',
-        is_home: true,
+        is_homepage: true,  // DB column is is_homepage
         show_in_nav: true,
         nav_order: 0,
       })
@@ -199,12 +199,13 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Create default components
+    // Note: DB uses component_type (not type) and content (not props)
     const defaultComponents = [
       {
         page_id: homepage.id,
-        type: 'navbar',
+        component_type: 'navbar',
         order_key: generateKeyBetween(null, null),
-        props: {
+        content: {
           logo: null,
           links: [
             { label: 'Home', href: '/' },
@@ -216,9 +217,9 @@ export async function POST(req: NextRequest) {
       },
       {
         page_id: homepage.id,
-        type: 'hero',
+        component_type: 'hero',
         order_key: generateKeyBetween('a0', null),
-        props: {
+        content: {
           headline: `Welcome to ${tenant.name}`,
           subheadline: 'We are excited to have you here',
           ctaText: 'Get Started',
@@ -229,9 +230,9 @@ export async function POST(req: NextRequest) {
       },
       {
         page_id: homepage.id,
-        type: 'features',
+        component_type: 'features',
         order_key: generateKeyBetween('a1', null),
-        props: {
+        content: {
           title: 'Our Services',
           subtitle: 'What we offer',
           features: [
@@ -244,9 +245,9 @@ export async function POST(req: NextRequest) {
       },
       {
         page_id: homepage.id,
-        type: 'cta',
+        component_type: 'cta',
         order_key: generateKeyBetween('a2', null),
-        props: {
+        content: {
           headline: 'Ready to get started?',
           subheadline: 'Contact us today',
           buttonText: 'Contact Us',
@@ -256,9 +257,9 @@ export async function POST(req: NextRequest) {
       },
       {
         page_id: homepage.id,
-        type: 'footer',
+        component_type: 'footer',
         order_key: generateKeyBetween('a3', null),
-        props: {
+        content: {
           copyright: `© ${new Date().getFullYear()} ${tenant.name}. All rights reserved.`,
           links: [
             { label: 'Privacy Policy', href: '/privacy' },

@@ -81,17 +81,18 @@ async function getSiteData(subdomain: string, slug: string) {
   }
   
   // Fallback: fetch components directly from the components table
+  // Note: DB uses component_type (not type), content (not props), is_locked (not is_visible)
   if (blocks.length === 0) {
     const { data: components } = await supabaseServer
       .from("components")
-      .select("id, type, props, order_key, is_visible")
+      .select("id, component_type, content, order_key, is_locked")
       .eq("page_id", page.id)
-      .eq("is_visible", true)
+      .eq("is_locked", false)  // is_locked=false means visible
       .order("order_key", { ascending: true });
 
     blocks = (components ?? []).map((c) => ({
-      type: c.type,
-      props: c.props ?? {},
+      type: c.component_type,  // Map component_type -> type
+      props: c.content ?? {},  // Map content -> props
     }));
   }
 
