@@ -76,43 +76,54 @@ export default function LoginPage() {
   };
 
   const handleDemoLogin = async () => {
+    const demoEmail = "pushkarshinde006@gmail.com";
+    const demoPassword = "Pushkar@123";
+    
+    // Auto-fill the form fields
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    setError("");
+    
+    // Wait a moment for state to update, then trigger login
+    await new Promise((r) => setTimeout(r, 100));
+    
     setIsLoading(true);
     try {
-      // Set mock user and tenant data
-      const mockUser: User = {
-        id: "demo_user_123",
-        supabase_auth_id: "demo_supabase_auth_uid",
-        email: "demo@example.com",
-        display_name: "Demo User",
-        avatar_url: "https://ui-avatars.com/api/?name=Demo+User&background=6366f1&color=fff",
-        role: "admin",
-        is_active: true,
-        last_login_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+      console.log('Demo login with:', demoEmail);
+      const result = await AuthService.signIn({ 
+        email: demoEmail, 
+        password: demoPassword 
+      });
 
-      const mockTenant: Tenant = {
-        id: "demo_tenant_456",
-        name: "Demo Organization",
-        slug: "demo-org",
-        owner_id: "demo_user_123",
-        plan_id: "plan_growth",
-        onboarding_completed: true,
-        stripe_customer_id: "cus_demo123",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+      console.log('Demo login result:', result);
+      
+      if (result.error) {
+        console.error('Demo login error:', result.error);
+        setError(result.error);
+        return;
+      }
 
-      // Store in Zustand
-      setUser(mockUser as any);
-      setTenant(mockTenant as any);
-
-      // Redirect to dashboard
-      await new Promise((r) => setTimeout(r, 500));
-      router.push("/dashboard");
-    } catch {
+      if (result.user && result.userData) {
+        // Use real user and tenant data from the API
+        const userData = result.userData;
+        const tenantData = userData.tenants;
+        
+        console.log('Setting user data:', userData);
+        console.log('Setting tenant data:', tenantData);
+        
+        setUser(userData);
+        setTenant(tenantData);
+        
+        console.log('Demo login successful, redirecting to dashboard');
+        router.push("/dashboard");
+      } else {
+        console.error('Missing user data in demo login:', result);
+        setError("Failed to get user data. Please try again.");
+      }
+    } catch (error) {
+      console.error('Demo login exception:', error);
       setError("Demo login failed. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };
