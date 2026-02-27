@@ -21,11 +21,14 @@ async function getSiteData(subdomain: string, slug: string) {
   // Find the website by subdomain
   const { data: website, error: wsError } = await supabaseServer
     .from("websites")
-    .select("id, name, subdomain, branding_config")
+    .select("id, name, subdomain, branding_config, status")
     .eq("subdomain", subdomain)
     .single();
 
-  if (wsError || !website) return null;
+  if (wsError || !website) {
+    console.log("[SiteRenderer] Website not found:", subdomain, wsError);
+    return null;
+  }
 
   // Find the page matching the slug (or homepage)
   let pageQuery = supabaseServer
@@ -40,30 +43,51 @@ async function getSiteData(subdomain: string, slug: string) {
   }
 
   const { data: page, error: pgError } = await pageQuery.single();
-  if (pgError || !page) return null;
+  
+  if (pgError || !page) {
+    console.log("[SiteRenderer] Page not found for website:", website.id, "slug:", slug, pgError);
+    return null;
+  }
 
   // Get the published deployment for this website
   const { data: deployment } = await supabaseServer
     .from("deployments")
     .select("id, snapshot_json")
     .eq("website_id", website.id)
-    .eq("status", "live")
-    .order("created_at", { ascending: false })
+    .eq("is_live", true)
+    .order("deployed_at", { ascending: false })
     .limit(1)
     .single();
 
   // If a deployment snapshot exists, use it; otherwise fetch live components
   let blocks: { type: string; props: Record<string, any> }[] = [];
 
-  if (deployment?.snapshot_json?.pages?.[page.id]) {
-    blocks = deployment.snapshot_json.pages[page.id].components ?? [];
-  } else {
-    // Fallback: fetch components directly from the components table
+  if (deployment?.snapshot_json) {
+    // Handle both array and object formats for pages in snapshot
+    const snapshotPages = deployment.snapshot_json.pages;
+    let pageData = null;
+    
+    if (Array.isArray(snapshotPages)) {
+      // Pages stored as array - find by ID
+      pageData = snapshotPages.find((p: { id: string }) => p.id === page.id);
+    } else if (snapshotPages && typeof snapshotPages === 'object') {
+      // Pages stored as object keyed by ID
+      pageData = snapshotPages[page.id];
+    }
+    
+    if (pageData?.components) {
+      blocks = pageData.components;
+    }
+  }
+  
+  // Fallback: fetch components directly from the components table
+  if (blocks.length === 0) {
     const { data: components } = await supabaseServer
       .from("components")
-      .select("id, type, props, sort_order")
+      .select("id, type, props, order_key, is_visible")
       .eq("page_id", page.id)
-      .order("sort_order", { ascending: true });
+      .eq("is_visible", true)
+      .order("order_key", { ascending: true });
 
     blocks = (components ?? []).map((c) => ({
       type: c.type,
@@ -75,6 +99,7 @@ async function getSiteData(subdomain: string, slug: string) {
     siteName: website.name,
     branding: website.branding_config ?? {},
     page: { title: page.title, blocks },
+    websiteStatus: website.status,
   };
 }
 
@@ -98,9 +123,32 @@ export default async function TenantSitePage({ params }: SitePageProps) {
     <html lang="en">
       <head>
         <title>{data.page.title} — {data.siteName}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body style={{ margin: 0, fontFamily }}>
-        {data.page.blocks.map((block, i) => {
+        {data.page.blocks.length === 0 ? (
+          <div style={{
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '32px',
+            background: bgLight,
+            color: textColor,
+            textAlign: 'center',
+          }}>
+            <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 16, color: primaryColor }}>
+              {data.siteName}
+            </h1>
+            <p style={{ fontSize: 18, color: '#666', maxWidth: 400 }}>
+              {data.websiteStatus === 'draft' 
+                ? 'This website is currently being built. Check back soon!'
+                : 'Welcome! Content is coming soon.'}
+            </p>
+          </div>
+        ) : (
+          data.page.blocks.map((block, i) => {
           const props = block.props ?? {};
           const heading = props.heading ?? props.title ?? props.text ?? block.type;
           const subheading = props.subheading ?? props.subtitle ?? props.description ?? "";
@@ -149,7 +197,8 @@ export default async function TenantSitePage({ params }: SitePageProps) {
               )}
             </section>
           );
-        })}
+        })
+        )}
       </body>
     </html>
   );
