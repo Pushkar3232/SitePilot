@@ -1,11 +1,19 @@
 // lib/gemini.ts
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-if (!process.env.GEMINI_API_KEY) {
-  console.warn('Warning: GEMINI_API_KEY not set. Gemini AI features will not work.');
+const apiKey = process.env.GEMINI_API_KEY;
+// log key length for debugging (do NOT log the actual key)
+if (process.env.NODE_ENV !== 'production') {
+  console.log('🔑 Gemini API key length:', apiKey ? apiKey.length : 0);
+} else {
+  console.log('🔑 Gemini API key set? ', !!apiKey);
 }
 
-export const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+if (!apiKey) {
+  console.warn('⚠️  GEMINI_API_KEY is not set. Gemini AI features will not work. Add it to your .env.local file.');
+}
+
+export const genAI = new GoogleGenerativeAI(apiKey || 'invalid-key-placeholder');
 
 export interface AIGenerationResult {
   components: Array<{
@@ -122,10 +130,16 @@ Generate a JSON array of website components that match this description. Make su
  */
 export async function generateWebsiteComponents(description: string, websiteName: string): Promise<AIGenerationResult> {
   try {
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY environment variable is not set. Add it to your .env.local file.');
+    }
+
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
     const systemPrompt = buildGeminiSystemPrompt();
     const userPrompt = buildGeminiUserPrompt(description, websiteName);
+
+    console.log('🤖 Calling Gemini API...', { websiteName });
 
     const response = await model.generateContent({
       contents: [
@@ -152,7 +166,7 @@ export async function generateWebsiteComponents(description: string, websiteName
     if (jsonMatch) {
       components = JSON.parse(jsonMatch[0]);
     } else {
-      throw new Error('Could not extract JSON from response');
+      throw new Error('Could not extract JSON from Gemini response');
     }
 
     // Estimate tokens (Gemini doesn't return exact token counts in standard API)
@@ -160,6 +174,8 @@ export async function generateWebsiteComponents(description: string, websiteName
     const promptTokens = Math.ceil(systemPrompt.length / 4 + userPrompt.length / 4);
     const completionTokens = Math.ceil(responseText.length / 4);
     const estimatedCost = calculateGeminiCost(promptTokens, completionTokens);
+
+    console.log('✅ Generated', components.length, 'components');
 
     return {
       components,
@@ -171,7 +187,21 @@ export async function generateWebsiteComponents(description: string, websiteName
       estimatedCost
     };
   } catch (error) {
-    console.error('Gemini API error:', error);
+    const errorMsg = (error as Error).message;
+    console.error('❌ Gemini API error:', errorMsg);
+    
+    if (errorMsg.includes('GEMINI_API_KEY')) {
+      throw new Error('Gemini API key is not configured. Please set GEMINI_API_KEY in your environment variables.');
+    }
+    
+    if (errorMsg.includes('API_KEY_INVALID') || errorMsg.includes('401')) {
+      throw new Error('Invalid Gemini API key. Please check your GEMINI_API_KEY setting.');
+    }
+    
+    if (errorMsg.includes('RESOURCE_EXHAUSTED')) {
+      throw new Error('API quota exceeded. Please try again later.');
+    }
+
     throw error;
   }
 }
