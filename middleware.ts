@@ -45,19 +45,18 @@ export async function middleware(request: NextRequest) {
   // Extract subdomain
   // Production: <subdomain>.sitepilot.io
   // Dev:        <subdomain>.localhost:3000
+  // Vercel:     site-pilot-alpha.vercel.app (should NOT be treated as subdomain)
   let subdomain = "";
 
-  if (hostname.includes(".")) {
+  // Only process subdomains for known domains (sitepilot.io and localhost)
+  if (hostname.includes("sitepilot.io")) {
+    const parts = hostname.split(".sitepilot.io");
+    subdomain = parts[0]; // e.g. "beans-cafe" from "beans-cafe.sitepilot.io"
+  } else if (hostname.includes("localhost")) {
     const parts = hostname.split(".");
-    // Handle cases like "beans-cafe.localhost:3000" or "beans-cafe.sitepilot.io"
-    if (hostname.includes("localhost")) {
-      subdomain = parts[0]; // e.g. "beans-cafe"
-    } else {
-      // e.g. "beans-cafe.sitepilot.io" → subdomain = "beans-cafe"
-      // e.g. "www.sitepilot.io" → subdomain = "www"
-      subdomain = parts[0];
-    }
+    subdomain = parts[0]; // e.g. "beans-cafe" from "beans-cafe.localhost:3000"
   }
+  // For Vercel domains (vercel.app, other domains), don't extract subdomain
 
   // If it's a tenant subdomain, rewrite to /sites/[subdomain]/[...slug]
   if (subdomain && !APP_SUBDOMAINS.has(subdomain)) {
