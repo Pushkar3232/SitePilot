@@ -98,44 +98,73 @@ const PALETTE_CATEGORIES = ["Layout", "Content", "Social Proof", "Conversion", "
 // ── Canvas Block Renderer ────────────────────────────────────────────────────
 
 function BlockRenderer({ type, props }: { type: string; props: Record<string, unknown> }) {
+  const primaryColor = "#8B1A1A";
+  const bgLight = "#F5F5F5";
+  const textColor = "#0D0D0D";
+  const fontFamily = "Inter, system-ui, sans-serif";
+
   switch (type) {
     case "navbar":
       return (
-        <div className="w-full flex items-center justify-between px-8 py-4 border-b border-gray-200" style={{ backgroundColor: String(props.bg_color || "#ffffff") }}>
-          <span className="font-bold text-lg" style={{ color: String(props.text_color || "#0d0d0d") }}>{String(props.brand || "Brand")}</span>
-          <div className="flex items-center gap-6">
+        <div style={{
+          padding: "16px 32px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          backgroundColor: textColor,
+          color: "#FFFFFF",
+          borderBottom: `1px solid ${primaryColor}`,
+          fontFamily,
+        }}>
+          <span style={{ fontWeight: 700, fontSize: 18 }}>{String(props.brand || "Brand")}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
             {((props.links as string[]) || []).map((link, i) => (
-              <span key={i} className="text-sm" style={{ color: String(props.text_color || "#0d0d0d") }}>{link}</span>
+              <span key={i} style={{ fontSize: 14 }}>{link}</span>
             ))}
-            {props.cta_text ? <span className="px-4 py-1.5 rounded-full text-sm font-medium bg-gray-900 text-white">{String(props.cta_text)}</span> : null}
+            {props.cta_text ? <span style={{ fontSize: 14, fontWeight: 500 }}>{String(props.cta_text)}</span> : null}
           </div>
         </div>
       );
     case "hero":
       return (
-        <div className="w-full py-20 px-8 text-center" style={{ backgroundColor: String(props.bg_color || "#f8f8f8") }}>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">{String(props.heading || "Hero Heading")}</h1>
-          {props.subheading ? <p className="text-lg text-gray-500 mb-8 max-w-xl mx-auto">{String(props.subheading)}</p> : null}
-          <div className="flex items-center justify-center gap-3">
-            {props.cta_primary ? <span className="px-6 py-2.5 rounded-full text-sm font-semibold bg-gray-900 text-white">{String(props.cta_primary)}</span> : null}
-            {props.cta_secondary ? <span className="px-6 py-2.5 rounded-full text-sm font-semibold border border-gray-300 text-gray-700">{String(props.cta_secondary)}</span> : null}
+        <div style={{
+          padding: "64px 32px",
+          backgroundColor: bgLight,
+          color: textColor,
+          textAlign: "center",
+          fontFamily,
+        }}>
+          <div style={{ maxWidth: 800, margin: "0 auto" }}>
+            <h1 style={{ fontSize: 48, fontWeight: 800, marginBottom: 16, color: primaryColor }}>
+              {String(props.heading || "Hero Heading")}
+            </h1>
+            {props.subheading ? <p style={{ fontSize: 18, color: "#555", marginBottom: 32 }}>{String(props.subheading)}</p> : null}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
+              {props.cta_primary ? <span style={{ padding: "12px 24px", backgroundColor: primaryColor, color: "#FFF", fontSize: 14, fontWeight: 600, borderRadius: 24, cursor: "pointer" }}>{String(props.cta_primary)}</span> : null}
+              {props.cta_secondary ? <span style={{ padding: "12px 24px", border: `1px solid ${primaryColor}`, color: primaryColor, fontSize: 14, fontWeight: 600, borderRadius: 24, cursor: "pointer" }}>{String(props.cta_secondary)}</span> : null}
+            </div>
           </div>
         </div>
       );
     case "features": {
       const items = (props.items as Array<{ icon: string; title: string; description: string }>) || [];
       return (
-        <div className="w-full py-16 px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900">{String(props.heading || "Features")}</h2>
-            {props.subheading ? <p className="text-gray-500 mt-2">{String(props.subheading)}</p> : null}
+        <div style={{
+          padding: "64px 32px",
+          backgroundColor: "#FFFFFF",
+          color: textColor,
+          fontFamily,
+        }}>
+          <div style={{ maxWidth: 800, margin: "0 auto 48px", textAlign: "center" }}>
+            <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 12 }}>{String(props.heading || "Features")}</h2>
+            {props.subheading ? <p style={{ fontSize: 16, color: "#555" }}>{String(props.subheading)}</p> : null}
           </div>
-          <div className="grid grid-cols-3 gap-8">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 32, maxWidth: 1200, margin: "0 auto" }}>
             {items.map((item, i) => (
-              <div key={i} className="text-center p-6 rounded-xl border border-gray-100 bg-gray-50">
-                <div className="text-3xl mb-3">{item.icon}</div>
-                <h3 className="font-semibold text-gray-900 mb-1">{item.title}</h3>
-                <p className="text-sm text-gray-500">{item.description}</p>
+              <div key={i} style={{ textAlign: "center", padding: 24 }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>{item.icon}</div>
+                <h3 style={{ fontWeight: 600, fontSize: 16, marginBottom: 8, color: textColor }}>{item.title}</h3>
+                <p style={{ fontSize: 14, color: "#555" }}>{item.description}</p>
               </div>
             ))}
           </div>
@@ -144,44 +173,69 @@ function BlockRenderer({ type, props }: { type: string; props: Record<string, un
     }
     case "rich_text":
       return (
-        <div className="w-full py-12 px-8" style={{ textAlign: (props.align as "left" | "center" | "right") || "left" }}>
-          {props.heading ? <h2 className="text-2xl font-bold text-gray-900 mb-4">{String(props.heading)}</h2> : null}
-          <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{String(props.content || "Your content here...")}</p>
+        <div style={{
+          padding: "64px 32px",
+          backgroundColor: bgLight,
+          color: textColor,
+          fontFamily,
+          textAlign: (props.align as "left" | "center" | "right") || "left",
+        }}>
+          {props.heading ? <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 16 }}>{String(props.heading)}</h2> : null}
+          <p style={{ fontSize: 16, color: "#555", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{String(props.content || "Your content here...")}</p>
         </div>
       );
     case "image_text":
       return (
-        <div className={cn("w-full py-16 px-8 flex items-center gap-12", props.image_side === "right" ? "flex-row" : "flex-row-reverse")}>
-          <div className="flex-1">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">{String(props.heading || "Heading")}</h2>
-            <p className="text-gray-600 leading-relaxed mb-6">{String(props.text || "")}</p>
-            {props.cta_text ? <span className="px-5 py-2 rounded-full text-sm font-semibold bg-gray-900 text-white cursor-pointer">{String(props.cta_text)}</span> : null}
+        <div style={{
+          padding: "64px 32px",
+          display: "flex",
+          alignItems: "center",
+          gap: 48,
+          flexDirection: props.image_side === "right" ? "row" : "row-reverse",
+          backgroundColor: "#FFFFFF",
+          color: textColor,
+          fontFamily,
+        }}>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 16 }}>{String(props.heading || "Heading")}</h2>
+            <p style={{ fontSize: 16, color: "#555", lineHeight: 1.6, marginBottom: 24 }}>{String(props.text || "")}</p>
+            {props.cta_text ? <span style={{ padding: "12px 24px", backgroundColor: primaryColor, color: "#FFF", fontSize: 14, fontWeight: 600, borderRadius: 24, cursor: "pointer" }}>{String(props.cta_text)}</span> : null}
           </div>
-          <div className="flex-1 h-56 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-sm">
-            {props.image_url ? <img src={String(props.image_url)} className="w-full h-full object-cover rounded-xl" alt="" /> : "Image placeholder"}
+          <div style={{ flex: 1, height: 224, backgroundColor: bgLight, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "#999", fontSize: 14 }}>
+            {props.image_url ? <img src={String(props.image_url)} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 8 }} alt="" /> : "Image placeholder"}
           </div>
         </div>
       );
     case "gallery":
       return (
-        <div className="w-full py-12 px-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">{String(props.heading || "Gallery")}</h2>
-          <div className="grid grid-cols-3 gap-4">
-            {[1,2,3,4,5,6].map(i => <div key={i} className="h-36 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm">Photo {i}</div>)}
+        <div style={{
+          padding: "64px 32px",
+          backgroundColor: bgLight,
+          color: textColor,
+          fontFamily,
+        }}>
+          <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 32, textAlign: "center" }}>{String(props.heading || "Gallery")}</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, maxWidth: 1200, margin: "0 auto" }}>
+            {[1,2,3,4,5,6].map(i => <div key={i} style={{ height: 144, backgroundColor: "#DDD", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "#999", fontSize: 14 }}>Photo {i}</div>)}
           </div>
         </div>
       );
     case "testimonials": {
       const items = (props.items as Array<{ name: string; role: string; quote: string }>) || [];
       return (
-        <div className="w-full py-16 px-8">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-10">{String(props.heading || "Testimonials")}</h2>
-          <div className="grid grid-cols-3 gap-6">
+        <div style={{
+          padding: "64px 32px",
+          backgroundColor: "#FFFFFF",
+          color: textColor,
+          fontFamily,
+        }}>
+          <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 40, textAlign: "center", color: primaryColor }}>{String(props.heading || "Testimonials")}</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24, maxWidth: 1200, margin: "0 auto" }}>
             {items.map((t, i) => (
-              <div key={i} className="p-6 rounded-xl border border-gray-100 bg-gray-50">
-                <p className="text-gray-600 text-sm mb-4 italic">"{t.quote}"</p>
-                <p className="font-semibold text-gray-900 text-sm">{t.name}</p>
-                <p className="text-gray-400 text-xs">{t.role}</p>
+              <div key={i} style={{ padding: 24, borderRadius: 8, backgroundColor: bgLight }}>
+                <p style={{ fontSize: 14, color: "#555", marginBottom: 16, fontStyle: "italic" }}>"{t.quote}"</p>
+                <p style={{ fontWeight: 600, fontSize: 14, color: textColor, marginBottom: 4 }}>{t.name}</p>
+                <p style={{ fontSize: 12, color: "#999" }}>{t.role}</p>
               </div>
             ))}
           </div>
@@ -191,15 +245,21 @@ function BlockRenderer({ type, props }: { type: string; props: Record<string, un
     case "team": {
       const members = (props.members as Array<{ name: string; role: string }>) || [];
       return (
-        <div className="w-full py-16 px-8 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">{String(props.heading || "Our Team")}</h2>
-          {props.subheading ? <p className="text-gray-500 mb-10">{String(props.subheading)}</p> : null}
-          <div className="flex justify-center gap-8">
+        <div style={{
+          padding: "64px 32px",
+          backgroundColor: bgLight,
+          color: textColor,
+          fontFamily,
+          textAlign: "center",
+        }}>
+          <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>{String(props.heading || "Our Team")}</h2>
+          {props.subheading ? <p style={{ fontSize: 16, color: "#555", marginBottom: 40 }}>{String(props.subheading)}</p> : null}
+          <div style={{ display: "flex", justifyContent: "center", gap: 32 }}>
             {members.map((m, i) => (
-              <div key={i} className="flex flex-col items-center">
-                <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-2xl font-bold mb-3">{m.name.charAt(0)}</div>
-                <p className="font-semibold text-gray-900 text-sm">{m.name}</p>
-                <p className="text-gray-400 text-xs">{m.role}</p>
+              <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <div style={{ height: 80, width: 80, borderRadius: "50%", backgroundColor: "#CCC", display: "flex", alignItems: "center", justifyContent: "center", color: "#666", fontSize: 32, fontWeight: 700, marginBottom: 12 }}>{m.name.charAt(0)}</div>
+                <p style={{ fontWeight: 600, fontSize: 14, color: textColor }}>{m.name}</p>
+                <p style={{ fontSize: 12, color: "#999" }}>{m.role}</p>
               </div>
             ))}
           </div>
@@ -209,11 +269,19 @@ function BlockRenderer({ type, props }: { type: string; props: Record<string, un
     case "stats": {
       const items = (props.items as Array<{ value: string; label: string }>) || [];
       return (
-        <div className="w-full py-14 px-8">
-          {props.heading ? <h2 className="text-2xl font-bold text-gray-900 text-center mb-10">{String(props.heading)}</h2> : null}
-          <div className="grid grid-cols-4 gap-6 text-center">
+        <div style={{
+          padding: "64px 32px",
+          backgroundColor: "#FFFFFF",
+          color: textColor,
+          fontFamily,
+        }}>
+          {props.heading ? <h2 style={{ fontSize: 32, fontWeight: 700, textAlign: "center", marginBottom: 40 }}>{String(props.heading)}</h2> : null}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 24, textAlign: "center", maxWidth: 1200, margin: "0 auto" }}>
             {items.map((stat, i) => (
-              <div key={i}><p className="text-4xl font-bold text-gray-900">{stat.value}</p><p className="text-sm text-gray-500 mt-1">{stat.label}</p></div>
+              <div key={i}>
+                <p style={{ fontSize: 40, fontWeight: 700, color: primaryColor }}>{stat.value}</p>
+                <p style={{ fontSize: 14, color: "#555", marginTop: 8 }}>{stat.label}</p>
+              </div>
             ))}
           </div>
         </div>
@@ -221,27 +289,38 @@ function BlockRenderer({ type, props }: { type: string; props: Record<string, un
     }
     case "cta":
       return (
-        <div className="w-full py-20 px-8 text-center" style={{ backgroundColor: String(props.bg_color || "#0d0d0d") }}>
-          <h2 className="text-3xl font-bold mb-3" style={{ color: String(props.text_color || "#ffffff") }}>{String(props.heading || "Call To Action")}</h2>
-          {props.subheading ? <p className="mb-8 opacity-70" style={{ color: String(props.text_color || "#ffffff") }}>{String(props.subheading)}</p> : null}
-          <span className="px-8 py-3 rounded-full font-semibold bg-white text-gray-900 text-sm">{String(props.button_text || "Get Started")}</span>
+        <div style={{
+          padding: "64px 32px",
+          backgroundColor: textColor,
+          color: "#FFFFFF",
+          textAlign: "center",
+          fontFamily,
+        }}>
+          <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 12 }}>{String(props.heading || "Call To Action")}</h2>
+          {props.subheading ? <p style={{ fontSize: 16, color: "#CCC", marginBottom: 32 }}>{String(props.subheading)}</p> : null}
+          <span style={{ padding: "16px 32px", borderRadius: 24, fontWeight: 600, backgroundColor: "#FFFFFF", color: textColor, fontSize: 14, cursor: "pointer" }}>{String(props.button_text || "Get Started")}</span>
         </div>
       );
     case "pricing": {
       const plans = (props.plans as Array<{ name: string; price: string; period: string; features: string[]; cta: string; highlight?: boolean }>) || [];
       return (
-        <div className="w-full py-16 px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-900">{String(props.heading || "Pricing")}</h2>
-            {props.subheading ? <p className="text-gray-500 mt-2">{String(props.subheading)}</p> : null}
+        <div style={{
+          padding: "64px 32px",
+          backgroundColor: bgLight,
+          color: textColor,
+          fontFamily,
+        }}>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 12 }}>{String(props.heading || "Pricing")}</h2>
+            {props.subheading ? <p style={{ fontSize: 16, color: "#555" }}>{String(props.subheading)}</p> : null}
           </div>
-          <div className="grid grid-cols-3 gap-6">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24, maxWidth: 1200, margin: "0 auto" }}>
             {plans.map((plan, i) => (
-              <div key={i} className={cn("p-6 rounded-2xl border", plan.highlight ? "border-gray-900 bg-gray-900 text-white shadow-xl" : "border-gray-200 bg-white")}>
-                <p className={cn("font-semibold mb-1", plan.highlight ? "text-white" : "text-gray-900")}>{plan.name}</p>
-                <p className={cn("text-3xl font-bold my-3", plan.highlight ? "text-white" : "text-gray-900")}>{plan.price}<span className="text-sm font-normal opacity-60">/{plan.period}</span></p>
-                <ul className="space-y-2 mb-6">{plan.features.map((f, j) => <li key={j} className={cn("text-sm flex items-center gap-2", plan.highlight ? "text-gray-300" : "text-gray-600")}><span>✓</span>{f}</li>)}</ul>
-                <span className={cn("block text-center py-2 rounded-full text-sm font-medium", plan.highlight ? "bg-white text-gray-900" : "bg-gray-900 text-white")}>{plan.cta}</span>
+              <div key={i} style={{ padding: 24, borderRadius: 16, border: plan.highlight ? `2px solid ${primaryColor}` : "1px solid #DDD", backgroundColor: plan.highlight ? primaryColor : "#FFFFFF", color: plan.highlight ? "#FFFFFF" : textColor }}>
+                <p style={{ fontWeight: 600, marginBottom: 8 }}>{plan.name}</p>
+                <p style={{ fontSize: 32, fontWeight: 700, marginBottom: 12 }}>{plan.price}<span style={{ fontSize: 14, fontWeight: 400, opacity: 0.7 }}>/{plan.period}</span></p>
+                <ul style={{ listStyle: "none", padding: 0, marginBottom: 24 }}>{plan.features.map((f, j) => <li key={j} style={{ fontSize: 14, margin: "8px 0", display: "flex", alignItems: "center", gap: 8 }}><span>✓</span>{f}</li>)}</ul>
+                <span style={{ display: "block", textAlign: "center", padding: "12px", borderRadius: 24, fontSize: 14, fontWeight: 600, backgroundColor: plan.highlight ? "#FFFFFF" : primaryColor, color: plan.highlight ? primaryColor : "#FFFFFF", cursor: "pointer" }}>{plan.cta}</span>
               </div>
             ))}
           </div>
@@ -251,15 +330,22 @@ function BlockRenderer({ type, props }: { type: string; props: Record<string, un
     case "contact_form": {
       const fields = (props.fields as string[]) || ["name", "email", "message"];
       return (
-        <div className="w-full py-16 px-8 max-w-xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">{String(props.heading || "Contact Us")}</h2>
-          {props.subheading ? <p className="text-gray-500 text-center mb-8">{String(props.subheading)}</p> : null}
-          <div className="space-y-4">
-            {fields.map((field, i) => field === "message"
-              ? <textarea key={i} placeholder="Message" rows={4} className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm resize-none" readOnly />
-              : <input key={i} type={field === "email" ? "email" : "text"} placeholder={field.charAt(0).toUpperCase() + field.slice(1)} className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm" readOnly />
-            )}
-            <button className="w-full py-3 rounded-full bg-gray-900 text-white text-sm font-semibold">{String(props.submit_text || "Send Message")}</button>
+        <div style={{
+          padding: "64px 32px",
+          backgroundColor: "#FFFFFF",
+          color: textColor,
+          fontFamily,
+        }}>
+          <div style={{ maxWidth: 560, margin: "0 auto" }}>
+            <h2 style={{ fontSize: 32, fontWeight: 700, textAlign: "center", marginBottom: 8 }}>{String(props.heading || "Contact Us")}</h2>
+            {props.subheading ? <p style={{ fontSize: 16, color: "#555", textAlign: "center", marginBottom: 32 }}>{String(props.subheading)}</p> : null}
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {fields.map((field, i) => field === "message"
+                ? <textarea key={i} placeholder="Message" rows={4} style={{ padding: 12, borderRadius: 8, border: "1px solid #DDD", fontSize: 14, fontFamily, resize: "none" }} readOnly />
+                : <input key={i} type={field === "email" ? "email" : "text"} placeholder={field.charAt(0).toUpperCase() + field.slice(1)} style={{ padding: "12px", borderRadius: 8, border: "1px solid #DDD", fontSize: 14, fontFamily }} readOnly />
+              )}
+              <button style={{ padding: "12px", borderRadius: 24, backgroundColor: primaryColor, color: "#FFFFFF", fontSize: 14, fontWeight: 600, cursor: "pointer", border: "none" }}>{String(props.submit_text || "Send Message")}</button>
+            </div>
           </div>
         </div>
       );
@@ -267,49 +353,66 @@ function BlockRenderer({ type, props }: { type: string; props: Record<string, un
     case "faq": {
       const items = (props.items as Array<{ question: string; answer: string }>) || [];
       return (
-        <div className="w-full py-16 px-8 max-w-2xl mx-auto">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-10">{String(props.heading || "FAQ")}</h2>
-          <div className="space-y-4">
-            {items.map((item, i) => (
-              <div key={i} className="p-5 rounded-xl border border-gray-100 bg-gray-50">
-                <p className="font-semibold text-gray-900 mb-2">{item.question}</p>
-                <p className="text-sm text-gray-500">{item.answer}</p>
-              </div>
-            ))}
+        <div style={{
+          padding: "64px 32px",
+          backgroundColor: bgLight,
+          color: textColor,
+          fontFamily,
+        }}>
+          <div style={{ maxWidth: 800, margin: "0 auto" }}>
+            <h2 style={{ fontSize: 32, fontWeight: 700, textAlign: "center", marginBottom: 40 }}>{String(props.heading || "FAQ")}</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {items.map((item, i) => (
+                <div key={i} style={{ padding: 20, borderRadius: 8, backgroundColor: "#FFFFFF" }}>
+                  <p style={{ fontWeight: 600, fontSize: 16, color: textColor, marginBottom: 8 }}>{item.question}</p>
+                  <p style={{ fontSize: 14, color: "#555" }}>{item.answer}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       );
     }
     case "video_embed":
       return (
-        <div className="w-full py-12 px-8">
-          {props.heading ? <h2 className="text-2xl font-bold text-gray-900 text-center mb-6">{String(props.heading)}</h2> : null}
-          <div className="h-72 bg-gray-900 rounded-xl flex items-center justify-center">
-            {props.url ? <iframe src={String(props.url)} className="w-full h-full rounded-xl" allow="autoplay" /> : <div className="flex flex-col items-center gap-2 text-gray-400"><Play className="h-10 w-10" /><span className="text-sm">Add video URL in settings</span></div>}
+        <div style={{
+          padding: "64px 32px",
+          backgroundColor: "#FFFFFF",
+          color: textColor,
+          fontFamily,
+        }}>
+          {props.heading ? <h2 style={{ fontSize: 32, fontWeight: 700, textAlign: "center", marginBottom: 24 }}>{String(props.heading)}</h2> : null}
+          <div style={{ maxWidth: 900, margin: "0 auto", height: 400, backgroundColor: "#222", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {props.url ? <iframe src={String(props.url)} style={{ width: "100%", height: "100%", borderRadius: 8, border: "none" }} allow="autoplay" /> : <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, color: "#999" }}><span style={{ fontSize: 32 }}>▶</span><span style={{ fontSize: 14 }}>Add video URL in settings</span></div>}
           </div>
         </div>
       );
     case "footer": {
       const links = (props.links as string[]) || [];
       return (
-        <div className="w-full py-12 px-8" style={{ backgroundColor: String(props.bg_color || "#0d0d0d") }}>
-          <div className="flex items-center justify-between">
+        <div style={{
+          padding: "48px 32px",
+          backgroundColor: textColor,
+          color: "#FFFFFF",
+          fontFamily,
+        }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
-              <p className="font-bold text-lg mb-1" style={{ color: String(props.text_color || "#ffffff") }}>{String(props.brand || "Brand")}</p>
-              {props.tagline ? <p className="text-sm opacity-50" style={{ color: String(props.text_color || "#ffffff") }}>{String(props.tagline)}</p> : null}
+              <p style={{ fontWeight: 700, fontSize: 18, marginBottom: 4 }}>{String(props.brand || "Brand")}</p>
+              {props.tagline ? <p style={{ fontSize: 14, color: "#AAA" }}>{String(props.tagline)}</p> : null}
             </div>
-            <div className="flex items-center gap-6">
-              {links.map((link, i) => <span key={i} className="text-sm opacity-60" style={{ color: String(props.text_color || "#ffffff") }}>{link}</span>)}
+            <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+              {links.map((link, i) => <span key={i} style={{ fontSize: 14, color: "#AAA" }}>{link}</span>)}
             </div>
           </div>
-          <div className="mt-8 pt-6 border-t border-white/10 text-center text-xs opacity-30" style={{ color: String(props.text_color || "#ffffff") }}>
+          <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,0.1)", textAlign: "center", fontSize: 12, color: "#666" }}>
             © {new Date().getFullYear()} {String(props.brand || "Brand")}. All rights reserved.
           </div>
         </div>
       );
     }
     default:
-      return <div className="w-full py-10 px-8 flex items-center justify-center bg-gray-50"><span className="text-sm text-gray-400 capitalize">{type.replace(/_/g, " ")} block</span></div>;
+      return <div style={{ width: "100%", padding: "40px 32px", backgroundColor: bgLight, display: "flex", alignItems: "center", justifyContent: "center", color: "#999", fontSize: 14, fontFamily }}><span style={{ textTransform: "capitalize" }}>{type.replace(/_/g, " ")} block</span></div>;
   }
 }
 
@@ -325,6 +428,8 @@ export default function BuilderPage({ params }: BuilderPageProps) {
   const [activeCategory, setActiveCategory] = useState("Layout");
   const [addingType, setAddingType] = useState<string | null>(null);
   const [creatingPage, setCreatingPage] = useState(false);
+  const [draggedBlockId, setDraggedBlockId] = useState<string | null>(null);
+  const [dragOverBlockId, setDragOverBlockId] = useState<string | null>(null);
   const autoCreatedRef = useRef(false);
 
   // Fetch website detail for name and pages
@@ -436,6 +541,64 @@ export default function BuilderPage({ params }: BuilderPageProps) {
     }
   }, [refetchComponents]);
 
+  // Drag-and-drop handlers for layers reordering
+  const handleDragStart = (e: React.DragEvent<HTMLButtonElement>, blockId: string) => {
+    setDraggedBlockId(blockId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLButtonElement>, blockId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverBlockId(blockId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverBlockId(null);
+  };
+
+  const handleDropBlock = useCallback(async (e: React.DragEvent<HTMLButtonElement>, targetBlockId: string) => {
+    e.preventDefault();
+    setDragOverBlockId(null);
+    
+    if (!draggedBlockId || draggedBlockId === targetBlockId) {
+      setDraggedBlockId(null);
+      return;
+    }
+
+    // Find the indices of the dragged and target blocks
+    const draggedIndex = blocks.findIndex((b: { id: string }) => b.id === draggedBlockId);
+    const targetIndex = blocks.findIndex((b: { id: string }) => b.id === targetBlockId);
+
+    if (draggedIndex === -1 || targetIndex === -1) {
+      setDraggedBlockId(null);
+      return;
+    }
+
+    // Reorder the blocks
+    const newBlocks = [...blocks];
+    const [movedBlock] = newBlocks.splice(draggedIndex, 1);
+    newBlocks.splice(targetIndex, 0, movedBlock);
+
+    // Update order_key for all blocks based on new positions
+    try {
+      await Promise.all(
+        newBlocks.map((block, index) =>
+          apiFetch(`/api/components/${block.id}`, {
+            method: "PUT",
+            body: { order_key: `${index * 1000}` },
+          })
+        )
+      );
+      setIsDirty(true);
+      refetchComponents();
+    } catch {
+      // error handling
+    }
+
+    setDraggedBlockId(null);
+  }, [draggedBlockId, blocks, refetchComponents]);
+
   // When selecting a block, load its props
   useEffect(() => {
     if (selectedBlock) {
@@ -524,16 +687,23 @@ export default function BuilderPage({ params }: BuilderPageProps) {
                   {(blocks as Array<{ id: string; type: string; is_visible: boolean }>).map((block) => (
                     <button
                       key={block.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, block.id)}
+                      onDragOver={(e) => handleDragOver(e, block.id)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDropBlock(e, block.id)}
                       onClick={() => setSelectedBlock(block.id)}
                       className={cn(
                         "w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-left transition-all duration-150",
                         selectedBlock === block.id
                           ? "bg-bg-light text-text-primary font-medium shadow-sm"
                           : "text-text-secondary hover:bg-bg-light/60",
+                        dragOverBlockId === block.id && "bg-blue-100 border-2 border-blue-400",
+                        draggedBlockId === block.id && "opacity-50 bg-blue-50",
                         !block.is_visible && "opacity-50"
                       )}
                     >
-                      <GripVertical className="h-3.5 w-3.5 text-text-muted shrink-0" />
+                      <GripVertical className="h-3.5 w-3.5 text-text-muted shrink-0 cursor-grab active:cursor-grabbing" />
                       <span className="flex-1 truncate capitalize">{block.type.replace(/_/g, " ")}</span>
                       <span
                         className="ml-auto p-0.5 rounded text-text-muted hover:text-text-primary"
@@ -651,10 +821,10 @@ export default function BuilderPage({ params }: BuilderPageProps) {
         </header>
 
         {/* Canvas */}
-        <div className="flex-1 overflow-y-auto p-6 flex justify-center bg-bg-dark/40">
+        <div className="flex-1 overflow-hidden p-6 flex justify-center items-start bg-bg-dark/40">
           <div
             className={cn(
-              "bg-white rounded-xl shadow-lg border border-border-light overflow-hidden transition-all duration-300 mx-auto w-full",
+              "bg-white rounded-xl shadow-lg border border-border-light overflow-y-auto transition-all duration-300 mx-auto w-full max-h-full",
               viewportWidths[viewport],
               viewport !== "desktop" && "max-w-full"
             )}
