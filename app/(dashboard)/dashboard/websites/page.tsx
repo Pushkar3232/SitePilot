@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Globe } from "lucide-react";
 import { DashboardTopbar } from "@/components/organisms/DashboardTopbar";
 import { WebsiteCard } from "@/components/organisms/WebsiteCard";
@@ -9,80 +10,52 @@ import { Button } from "@/components/atoms/Button";
 import { EmptyState } from "@/components/molecules/EmptyState";
 import { Modal } from "@/components/molecules/Modal";
 import Input from "@/components/atoms/Input/Input";
+import { Skeleton } from "@/components/atoms/Skeleton";
+import { Card } from "@/components/molecules/Card";
+import { useWebsitesApi, useCreateWebsiteApi } from "@/hooks/use-api";
 import type { Website } from "@/types/website.types";
 
-// Mock data
-const MOCK_WEBSITES: Website[] = [
-  {
-    id: "1",
-    tenant_id: "t1",
-    name: "Portfolio Site",
-    subdomain: "john-portfolio-x7k2",
-    status: "published",
-    branding_config: {
-      primary_color: "#111111",
-      secondary_color: "#F5F5F5",
-      accent_color: "#8B1A1A",
-      font_heading: "Inter",
-      font_body: "Inter",
-    },
-    created_at: "2025-12-01T10:00:00Z",
-    updated_at: "2026-02-24T08:30:00Z",
-    published_at: "2026-02-20T12:00:00Z",
-  },
-  {
-    id: "2",
-    tenant_id: "t1",
-    name: "Coffee Shop",
-    subdomain: "beans-cafe-r3m5",
-    status: "draft",
-    branding_config: {
-      primary_color: "#5D3A1A",
-      secondary_color: "#FFF8F0",
-      accent_color: "#D4A574",
-      font_heading: "Sora",
-      font_body: "Inter",
-    },
-    created_at: "2026-01-15T14:00:00Z",
-    updated_at: "2026-02-23T16:45:00Z",
-  },
-  {
-    id: "3",
-    tenant_id: "t1",
-    name: "Tech Blog",
-    subdomain: "tech-today-p8n1",
-    custom_domain: "www.techtoday.com",
-    status: "published",
-    branding_config: {
-      primary_color: "#0F172A",
-      secondary_color: "#F8FAFC",
-      accent_color: "#3B82F6",
-      font_heading: "Inter",
-      font_body: "Inter",
-    },
-    created_at: "2025-11-10T09:00:00Z",
-    updated_at: "2026-02-21T11:00:00Z",
-    published_at: "2026-02-21T11:00:00Z",
-  },
-];
-
 export default function WebsitesPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newWebsiteName, setNewWebsiteName] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
 
-  const filteredWebsites = MOCK_WEBSITES.filter((w) =>
+  const { data, loading, error, refetch } = useWebsitesApi();
+  const { mutate: createWebsite, loading: isCreating } = useCreateWebsiteApi({
+    onSuccess: () => {
+      setShowCreateModal(false);
+      setNewWebsiteName("");
+      refetch();
+    },
+  });
+
+  const websites: Website[] = (data?.websites ?? []).map((w) => ({
+    id: w.id,
+    tenant_id: "",
+    name: w.name,
+    subdomain: w.subdomain,
+    custom_domain: w.custom_domain ?? undefined,
+    status: w.status,
+    branding_config: {
+      primary_color: (w.branding_config?.primary_color as string) ?? "#0D0D0D",
+      secondary_color: (w.branding_config?.secondary_color as string) ?? "#F5F5F5",
+      accent_color: (w.branding_config?.accent_color as string) ?? "#8B1A1A",
+      font_heading: (w.branding_config?.font_heading as string) ?? "Inter",
+      font_body: (w.branding_config?.font_body as string) ?? "Inter",
+    },
+    created_at: w.created_at,
+    updated_at: w.updated_at,
+    published_at: w.last_deployed_at ?? undefined,
+  }));
+
+  const filteredWebsites = websites.filter((w) =>
     w.name.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleCreate = async () => {
-    setIsCreating(true);
-    // TODO: POST /api/websites
-    await new Promise((r) => setTimeout(r, 1000));
-    setIsCreating(false);
-    setShowCreateModal(false);
-    setNewWebsiteName("");
+    if (!newWebsiteName.trim()) return;
+    await createWebsite({ name: newWebsiteName.trim() });
   };
 
   return (
@@ -106,8 +79,31 @@ export default function WebsitesPage() {
           </Button>
         </div>
 
-        {/* Grid */}
-        {filteredWebsites.length > 0 ? (
+        {/* Loading state */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} padding="md">
+                <div className="space-y-3">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-3 w-24" />
+                  <div className="flex gap-2 pt-2">
+                    <Skeleton className="h-8 w-20 rounded-lg" />
+                    <Skeleton className="h-8 w-20 rounded-lg" />
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : error ? (
+          <EmptyState
+            icon={<Globe className="h-12 w-12" />}
+            title="Failed to load websites"
+            description={error}
+            action={{ label: "Retry", onClick: refetch }}
+          />
+        ) : filteredWebsites.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredWebsites.map((website) => (
               <WebsiteCard
@@ -115,18 +111,20 @@ export default function WebsitesPage() {
                 website={website}
                 canEdit
                 canDelete
+                onEdit={(w) => router.push(`/dashboard/websites/${w.id}/builder`)}
               />
             ))}
           </div>
         ) : (
           <EmptyState
             icon={<Globe className="h-12 w-12" />}
-            title="No websites yet"
-            description="Create your first website to get started."
-            action={{
-              label: "Create Website",
-              onClick: () => setShowCreateModal(true),
-            }}
+            title={search ? "No matching websites" : "No websites yet"}
+            description={search ? "Try a different search term." : "Create your first website to get started."}
+            action={
+              search
+                ? { label: "Clear Search", onClick: () => setSearch("") }
+                : { label: "Create Website", onClick: () => setShowCreateModal(true) }
+            }
           />
         )}
       </div>

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Palette, Type, Image, RotateCcw } from "lucide-react";
 import { DashboardTopbar } from "@/components/organisms/DashboardTopbar";
 import { Card } from "@/components/molecules/Card";
 import { Button } from "@/components/atoms/Button";
-import Input from "@/components/atoms/Input/Input";
 import { Divider } from "@/components/atoms/Divider";
+import { Skeleton } from "@/components/atoms/Skeleton";
+import { useWebsitesApi, apiFetch } from "@/hooks/use-api";
 
 const PRESET_COLORS = [
   "#8B1A1A", "#0F172A", "#1E3A5F", "#14532D",
@@ -17,25 +18,111 @@ const FONTS = [
   "Inter", "Sora", "Poppins", "DM Sans", "Outfit", "Space Grotesk", "Playfair Display", "Lora",
 ];
 
+const DEFAULT_BRANDING = {
+  primary_color: "#8B1A1A",
+  secondary_color: "#F5F5F5",
+  accent_color: "#0D0D0D",
+  heading_font: "Inter",
+  body_font: "Inter",
+};
+
 export default function BrandingPage() {
-  const [primary, setPrimary] = useState("#8B1A1A");
-  const [secondary, setSecondary] = useState("#F5F5F5");
-  const [accent, setAccent] = useState("#0D0D0D");
-  const [headingFont, setHeadingFont] = useState("Inter");
-  const [bodyFont, setBodyFont] = useState("Inter");
+  const { data: websitesData, loading } = useWebsitesApi();
+  const websites = websitesData?.websites ?? [];
+
+  // Use the first website's branding config
+  const website = websites?.[0];
+  const savedBranding = website?.branding_config ?? {};
+
+  const [primary, setPrimary] = useState(DEFAULT_BRANDING.primary_color);
+  const [secondary, setSecondary] = useState(DEFAULT_BRANDING.secondary_color);
+  const [accent, setAccent] = useState(DEFAULT_BRANDING.accent_color);
+  const [headingFont, setHeadingFont] = useState(DEFAULT_BRANDING.heading_font);
+  const [bodyFont, setBodyFont] = useState(DEFAULT_BRANDING.body_font);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedWebsiteId, setSelectedWebsiteId] = useState<string>("");
+
+  // Populate branding from selected website
+  useEffect(() => {
+    if (websites?.length && !selectedWebsiteId) {
+      setSelectedWebsiteId(websites[0].id);
+    }
+  }, [websites, selectedWebsiteId]);
+
+  useEffect(() => {
+    const w = websites?.find((ws: any) => ws.id === selectedWebsiteId);
+    const b = w?.branding_config ?? {};
+    setPrimary(b.primary_color ?? DEFAULT_BRANDING.primary_color);
+    setSecondary(b.secondary_color ?? DEFAULT_BRANDING.secondary_color);
+    setAccent(b.accent_color ?? DEFAULT_BRANDING.accent_color);
+    setHeadingFont(b.heading_font ?? DEFAULT_BRANDING.heading_font);
+    setBodyFont(b.body_font ?? DEFAULT_BRANDING.body_font);
+  }, [selectedWebsiteId, websites]);
 
   const handleSave = async () => {
+    if (!selectedWebsiteId) return;
     setIsSaving(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setIsSaving(false);
+    try {
+      await apiFetch(`/api/websites/${selectedWebsiteId}`, {
+        method: "PUT",
+        body: {
+          branding_config: {
+            primary_color: primary,
+            secondary_color: secondary,
+            accent_color: accent,
+            heading_font: headingFont,
+            body_font: bodyFont,
+          },
+        },
+      });
+    } catch {
+      // handle error
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  const handleReset = () => {
+    setPrimary(DEFAULT_BRANDING.primary_color);
+    setSecondary(DEFAULT_BRANDING.secondary_color);
+    setAccent(DEFAULT_BRANDING.accent_color);
+    setHeadingFont(DEFAULT_BRANDING.heading_font);
+    setBodyFont(DEFAULT_BRANDING.body_font);
+  };
+
+  if (loading) {
+    return (
+      <>
+        <DashboardTopbar pageTitle="Branding" />
+        <div className="p-6 space-y-6 max-w-3xl">
+          <Card padding="md"><Skeleton className="h-40 w-full" /></Card>
+          <Card padding="md"><Skeleton className="h-32 w-full" /></Card>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <DashboardTopbar pageTitle="Branding" />
 
       <div className="p-6 space-y-6 max-w-3xl">
+        {/* Website selector */}
+        {websites && websites.length > 1 && (
+          <div>
+            <label className="text-xs font-medium text-text-muted block mb-2">Website</label>
+            <select
+              value={selectedWebsiteId}
+              onChange={(e) => setSelectedWebsiteId(e.target.value)}
+              className="h-10 px-3 text-sm rounded-lg border border-border-light bg-bg-white text-text-primary w-full max-w-xs"
+            >
+              {websites.map((w: any) => (
+                <option key={w.id} value={w.id}>{w.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Colors */}
         <Card padding="md">
           <div className="flex items-center gap-2 mb-4">
@@ -145,7 +232,7 @@ export default function BrandingPage() {
         <Divider />
 
         <div className="flex items-center justify-end gap-3">
-          <Button variant="secondary" leftIcon={<RotateCcw className="h-4 w-4" />}>
+          <Button variant="secondary" leftIcon={<RotateCcw className="h-4 w-4" />} onClick={handleReset}>
             Reset
           </Button>
           <Button onClick={handleSave} isLoading={isSaving}>

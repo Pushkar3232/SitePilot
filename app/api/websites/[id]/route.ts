@@ -32,19 +32,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       .from('websites')
       .select(`
         *,
-        pages (
-          id,
-          title,
-          slug,
-          status,
-          is_home,
-          show_in_nav,
-          nav_order,
-          nav_label,
-          seo_meta,
-          created_at,
-          updated_at
-        )
+        pages (*)
       `)
       .eq('id', id)
       .eq('tenant_id', user.tenant_id)
@@ -54,9 +42,11 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       return errorResponse('NOT_FOUND', 'Website not found', 404);
     }
 
-    // Sort pages by nav_order
+    // Sort pages by created_at (fallback — nav_order may not exist)
     if (website.pages) {
-      website.pages.sort((a: { nav_order: number }, b: { nav_order: number }) => a.nav_order - b.nav_order);
+      website.pages.sort((a: { created_at: string }, b: { created_at: string }) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
     }
 
     return jsonResponse({ website });

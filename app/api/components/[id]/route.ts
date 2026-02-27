@@ -48,7 +48,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     // Remove the joins from response
     const { pages: _, ...componentData } = component;
 
-    return jsonResponse({ component: componentData });
+    return jsonResponse({ component: { ...componentData, type: componentData.component_type, props: componentData.content, is_visible: !componentData.is_locked } });
   } catch (err) {
     if (err instanceof ApiError) return err.toResponse();
     if (err instanceof Response) return err;
@@ -103,9 +103,10 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       updated_at: new Date().toISOString(),
     };
 
-    if (props !== undefined) updateData.props = props;
+    if (props !== undefined) updateData.content = props;
     if (order_key !== undefined) updateData.order_key = order_key;
-    if (is_visible !== undefined) updateData.is_visible = is_visible;
+    // is_visible is mapped to is_locked (inverted) since DB has no is_visible column
+    if (is_visible !== undefined) updateData.is_locked = !is_visible;
 
     // Update component
     const { data: component, error: updateError } = await supabaseServer
@@ -120,7 +121,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       return errorResponse('INTERNAL_ERROR', 'Failed to update component', 500);
     }
 
-    return jsonResponse({ component });
+    return jsonResponse({ component: { ...component, type: component.component_type, props: component.content, is_visible: !component.is_locked } });
   } catch (err) {
     if (err instanceof ApiError) return err.toResponse();
     if (err instanceof Response) return err;

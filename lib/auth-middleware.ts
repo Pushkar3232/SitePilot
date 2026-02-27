@@ -79,14 +79,21 @@ export async function verifyRequestAndGetUser(req: Request): Promise<Authenticat
       if (user && !error) {
         authUserId = user.id;
       } else {
+        console.warn('Supabase token verification failed:', error?.message || 'No user returned');
         throw new Error('Invalid Supabase token');
       }
     } catch (supabaseError) {
+      console.warn('Supabase auth error:', supabaseError instanceof Error ? supabaseError.message : supabaseError);
       // Fallback to Firebase authentication for backward compatibility
       if (adminAuth) {
         console.warn('🔧 Fallback: Using Firebase authentication');
-        const decoded = await adminAuth.verifyIdToken(token);
-        authUserId = decoded.uid;
+        try {
+          const decoded = await adminAuth.verifyIdToken(token);
+          authUserId = decoded.uid;
+        } catch (firebaseError) {
+          console.error('Firebase auth also failed:', firebaseError instanceof Error ? firebaseError.message : firebaseError);
+          throw new ApiError('UNAUTHORIZED', 'Invalid authentication token', 401);
+        }
       } else {
         // Development mode: use token as auth_user_id directly
         console.warn('🔧 Development mode: Using token as auth_user_id');
@@ -95,7 +102,11 @@ export async function verifyRequestAndGetUser(req: Request): Promise<Authenticat
     }
 
     // Fetch user row from Supabase (includes role + tenant + plan)
-    const { data: user, error } = await supabaseServer
+    // Try supabase_auth_id first, then fall back to firebase_id for backward compatibility
+    let user: any = null;
+    let fetchError: any = null;
+
+    const { data: userBySupabase, error: errSupabase } = await supabaseServer
       .from('users')
       .select(`
         *,
@@ -104,10 +115,30 @@ export async function verifyRequestAndGetUser(req: Request): Promise<Authenticat
           plans (*)
         )
       `)
-      .eq('firebase_id', authUserId)
+      .eq('supabase_auth_id', authUserId)
       .single();
 
-    if (error || !user) {
+    if (userBySupabase && !errSupabase) {
+      user = userBySupabase;
+    } else {
+      // Fallback: try firebase_id for legacy users
+      const { data: userByFirebase, error: errFirebase } = await supabaseServer
+        .from('users')
+        .select(`
+          *,
+          tenants (
+            *,
+            plans (*)
+          )
+        `)
+        .eq('firebase_id', authUserId)
+        .single();
+
+      user = userByFirebase;
+      fetchError = errFirebase;
+    }
+
+    if (!user) {
       throw new ApiError('USER_NOT_FOUND', 'User not found in database', 401);
     }
 

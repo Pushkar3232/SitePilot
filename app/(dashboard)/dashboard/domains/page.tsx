@@ -11,18 +11,17 @@ import Input from "@/components/atoms/Input/Input";
 import { EmptyState } from "@/components/molecules/EmptyState";
 import { Alert } from "@/components/molecules/Alert";
 import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
+import { Skeleton } from "@/components/atoms/Skeleton";
+import { Select } from "@/components/atoms/Select";
+import { useWebsitesApi, useAddDomainApi } from "@/hooks/use-api";
 
-interface Domain {
+interface DomainInfo {
   id: string;
   domain: string;
   websiteName: string;
+  websiteId: string;
   status: "verified" | "pending" | "failed";
 }
-
-const MOCK_DOMAINS: Domain[] = [
-  { id: "1", domain: "www.johndoe.com", websiteName: "Portfolio Site", status: "verified" },
-  { id: "2", domain: "beans-coffee.com", websiteName: "Coffee Shop", status: "pending" },
-];
 
 const statusConfig = {
   verified: { icon: <CheckCircle2 className="h-4 w-4" />, variant: "success" as const, label: "Verified" },
@@ -31,25 +30,48 @@ const statusConfig = {
 };
 
 export default function DomainsPage() {
-  const [domains, setDomains] = useState(MOCK_DOMAINS);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newDomain, setNewDomain] = useState("");
+  const [selectedWebsiteId, setSelectedWebsiteId] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  const { data: websitesData, loading: websitesLoading, refetch } = useWebsitesApi();
+  const { mutate: addDomain, loading: addingDomain } = useAddDomainApi({
+    onSuccess: () => {
+      setShowAddModal(false);
+      setNewDomain("");
+      setSelectedWebsiteId("");
+      refetch();
+    },
+  });
+
+  const websites = websitesData?.websites ?? [];
+
+  // Build domain list from websites that have custom domains
+  const domains: DomainInfo[] = websites
+    .filter((w) => w.custom_domain)
+    .map((w) => ({
+      id: w.id,
+      domain: w.custom_domain!,
+      websiteName: w.name,
+      websiteId: w.id,
+      status: (w.domain_verified ? "verified" : "pending") as DomainInfo["status"],
+    }));
+
+  const websiteOptions = websites
+    .filter((w) => !w.custom_domain)
+    .map((w) => ({ value: w.id, label: w.name }));
+
   const handleAdd = () => {
-    setDomains((prev) => [
-      ...prev,
-      { id: Date.now().toString(), domain: newDomain, websiteName: "—", status: "pending" },
-    ]);
-    setNewDomain("");
-    setShowAddModal(false);
+    if (!newDomain.trim() || !selectedWebsiteId) return;
+    addDomain({ websiteId: selectedWebsiteId, domain: newDomain.trim() });
   };
 
   const handleDelete = () => {
-    if (deleteId) {
-      setDomains((prev) => prev.filter((d) => d.id !== deleteId));
-      setDeleteId(null);
-    }
+    // Domain removal would be done by updating the website to remove the custom_domain
+    // For now, close the dialog — the API doesn't have a dedicated delete domain endpoint
+    setDeleteId(null);
+    refetch();
   };
 
   return (
@@ -76,7 +98,24 @@ export default function DomainsPage() {
           </Button>
         </div>
 
-        {domains.length > 0 ? (
+        {websitesLoading ? (
+          <Card padding="none">
+            <div className="divide-y divide-border-light">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between px-5 py-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-5 w-5 rounded" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-28" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                </div>
+              ))}
+            </div>
+          </Card>
+        ) : domains.length > 0 ? (
           <Card padding="none">
             <div className="divide-y divide-border-light">
               {domains.map((d) => {
@@ -145,9 +184,21 @@ export default function DomainsPage() {
             value={newDomain}
             onChange={(e) => setNewDomain(e.target.value)}
           />
+          <Select
+            label="Website"
+            options={websiteOptions}
+            value={selectedWebsiteId}
+            onChange={(val) => setSelectedWebsiteId(val)}
+          />
           <div className="flex justify-end gap-3">
             <Button variant="secondary" onClick={() => setShowAddModal(false)}>Cancel</Button>
-            <Button onClick={handleAdd} disabled={!newDomain.trim()}>Add Domain</Button>
+            <Button
+              onClick={handleAdd}
+              disabled={!newDomain.trim() || !selectedWebsiteId}
+              isLoading={addingDomain}
+            >
+              Add Domain
+            </Button>
           </div>
         </div>
       </Modal>

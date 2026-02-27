@@ -79,7 +79,12 @@ export async function GET(req: NextRequest) {
       return errorResponse('INTERNAL_ERROR', 'Failed to fetch components', 500);
     }
 
-    return jsonResponse({ components });
+    return jsonResponse({ components: components.map((c: Record<string, unknown>) => ({
+      ...c,
+      type: c.component_type,
+      props: c.content,
+      is_visible: !c.is_locked,
+    })) });
   } catch (err) {
     if (err instanceof ApiError) return err.toResponse();
     if (err instanceof Response) return err;
@@ -153,10 +158,9 @@ export async function POST(req: NextRequest) {
       .from('components')
       .insert({
         page_id: pageId,
-        type,
-        props,
+        component_type: type,
+        content: props,
         order_key,
-        is_visible: true,
         is_locked: false,
       })
       .select()
@@ -167,7 +171,7 @@ export async function POST(req: NextRequest) {
       return errorResponse('INTERNAL_ERROR', 'Failed to create component', 500);
     }
 
-    return jsonResponse({ component }, 201);
+    return jsonResponse({ component: { ...component, type: component.component_type, props: component.content, is_visible: true } }, 201);
   } catch (err) {
     if (err instanceof ApiError) return err.toResponse();
     if (err instanceof Response) return err;

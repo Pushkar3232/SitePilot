@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Building2, Bell, Trash2, Shield } from "lucide-react";
 import { DashboardTopbar } from "@/components/organisms/DashboardTopbar";
 import { Card } from "@/components/molecules/Card";
@@ -10,21 +10,72 @@ import { Textarea } from "@/components/atoms/Textarea";
 import { Toggle } from "@/components/atoms/Toggle";
 import { Divider } from "@/components/atoms/Divider";
 import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
+import { Skeleton } from "@/components/atoms/Skeleton";
+import { useAuthStore } from "@/store/auth.store";
+import { apiFetch } from "@/hooks/use-api";
 
 export default function SettingsPage() {
-  const [orgName, setOrgName] = useState("Acme Inc.");
-  const [orgSlug, setOrgSlug] = useState("acme-inc");
-  const [orgDescription, setOrgDescription] = useState("A great company building great things.");
+  const { tenant } = useAuthStore();
+
+  const [orgName, setOrgName] = useState("");
+  const [orgSlug, setOrgSlug] = useState("");
+  const [orgDescription, setOrgDescription] = useState("");
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [weeklyDigest, setWeeklyDigest] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteOrg, setShowDeleteOrg] = useState(false);
 
+  // Populate from tenant data
+  useEffect(() => {
+    if (tenant) {
+      setOrgName(tenant.name ?? "");
+      setOrgSlug(tenant.slug ?? "");
+    }
+  }, [tenant]);
+
   const handleSave = async () => {
+    if (!tenant) return;
     setIsSaving(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setIsSaving(false);
+    try {
+      await apiFetch(`/api/tenants/${tenant.id}`, {
+        method: "PUT",
+        body: { name: orgName, slug: orgSlug },
+      });
+    } catch {
+      // toast or handle error
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  const handleDeleteOrg = async () => {
+    if (!tenant) return;
+    try {
+      await apiFetch(`/api/tenants/${tenant.id}`, { method: "DELETE" });
+      setShowDeleteOrg(false);
+      window.location.href = "/login";
+    } catch {
+      setShowDeleteOrg(false);
+    }
+  };
+
+  if (!tenant) {
+    return (
+      <>
+        <DashboardTopbar pageTitle="Settings" />
+        <div className="p-6 space-y-6 max-w-3xl">
+          <Card padding="md">
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          </Card>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -127,10 +178,7 @@ export default function SettingsPage() {
       <ConfirmDialog
         isOpen={showDeleteOrg}
         onCancel={() => setShowDeleteOrg(false)}
-        onConfirm={() => {
-          // TODO: call DELETE /api/tenants/:id
-          setShowDeleteOrg(false);
-        }}
+        onConfirm={handleDeleteOrg}
         title="Delete Organization"
         description="Are you absolutely sure? All websites, pages, team members, and data will be permanently deleted."
         confirmLabel="Delete Forever"

@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     // Parse request body
     const body = await req.json();
-    const { websiteId, title, slug, seo_meta } = body;
+    const { websiteId, title, slug, is_homepage } = body;
 
     // Validate input
     if (!websiteId) {
@@ -148,17 +148,6 @@ export async function POST(req: NextRequest) {
       return errorResponse('SLUG_TAKEN', 'A page with this slug already exists', 409);
     }
 
-    // Get the max nav_order for this website
-    const { data: lastPage } = await supabaseServer
-      .from('pages')
-      .select('nav_order')
-      .eq('website_id', websiteId)
-      .order('nav_order', { ascending: false })
-      .limit(1)
-      .single();
-
-    const navOrder = lastPage ? lastPage.nav_order + 1 : 0;
-
     // Create page
     const { data: page, error: createError } = await supabaseServer
       .from('pages')
@@ -167,10 +156,7 @@ export async function POST(req: NextRequest) {
         title: title.trim(),
         slug,
         status: 'draft',
-        is_home: false,
-        show_in_nav: true,
-        nav_order: navOrder,
-        seo_meta: seo_meta || {},
+        is_homepage: is_homepage === true,
       })
       .select()
       .single();

@@ -64,6 +64,7 @@ export interface Tenant {
 export interface User {
   id: string;
   firebase_id: string;
+  supabase_auth_id?: string;
   email: string;
   full_name: string | null;
   avatar_url: string | null;
