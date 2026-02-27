@@ -11,7 +11,7 @@ import { hasPermission } from '@/lib/rbac';
 
 /**
  * GET /api/analytics/dashboard
- * Fetch analytics metrics for the dashboard
+ * Fetch comprehensive analytics metrics for the dashboard
  */
 export async function GET(req: NextRequest) {
   try {
@@ -41,40 +41,155 @@ export async function GET(req: NextRequest) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
     const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = new Date().toISOString().split('T')[0];
 
-    // Get websites for this tenant
-    let websiteFilter = supabaseServer
+    // Get all websites for this tenant (for the dropdown)
+    const { data: allWebsites } = await supabaseServer
       .from('websites')
-      .select('id')
+      .select('id, name, subdomain, status')
       .eq('tenant_id', user.tenant_id)
-      .neq('status', 'archived');
+      .neq('status', 'archived')
+      .order('name');
 
-    if (websiteId) {
-      websiteFilter = websiteFilter.eq('id', websiteId);
+    // Build website filter for metrics
+    let websiteIds: string[] = [];
+    if (websiteId && websiteId !== 'all') {
+      websiteIds = [websiteId];
+    } else {
+      websiteIds = allWebsites?.map(w => w.id) || [];
     }
 
-    const { data: websites } = await websiteFilter;
-    const websiteIds = websites?.map(w => w.id) || [];
-
-    // Get page views
+    // Get detailed metrics from usage_metrics table
     let totalPageViews = 0;
-    let pageViewsByDay: Record<string, number> = {};
+    let totalUniqueVisitors = 0;
+    let totalSessions = 0;
+    let totalBounceRateSum = 0;
+    let totalSessionDurationSum = 0;
+    let bounceRateCount = 0;
+    let sessionDurationCount = 0;
+    const pageViewsByDay: Record<string, number> = {};
+    const visitorsByDay: Record<string, number> = {};
+    const aggregatedReferrers: Record<string, number> = {};
+    const aggregatedTopPages: Record<string, number> = {};
+    const aggregatedDevices: Record<string, number> = {};
+    const aggregatedCountries: Record<string, number> = {};
 
     if (websiteIds.length > 0) {
       const { data: metrics } = await supabaseServer
         .from('usage_metrics')
-        .select('date, page_views')
+        .select('*')
         .in('website_id', websiteIds)
-        .gte('date', startDateStr);
+        .gte('date', startDateStr)
+        .lte('date', endDateStr)
+        .order('date');
 
-      if (metrics) {
+      if (metrics && metrics.length > 0) {
         for (const m of metrics) {
+          // Aggregate totals
           totalPageViews += m.page_views || 0;
+          totalUniqueVisitors += m.unique_visitors || 0;
+          totalSessions += m.sessions || 0;
+          
+          if (m.bounce_rate !== null && m.bounce_rate !== undefined) {
+            totalBounceRateSum += parseFloat(m.bounce_rate) || 0;
+            bounceRateCount++;
+          }
+          if (m.avg_session_duration_s !== null && m.avg_session_duration_s !== undefined) {
+            totalSessionDurationSum += m.avg_session_duration_s || 0;
+            sessionDurationCount++;
+          }
+
+          // Daily breakdown
           const dateKey = m.date;
           pageViewsByDay[dateKey] = (pageViewsByDay[dateKey] || 0) + (m.page_views || 0);
+          visitorsByDay[dateKey] = (visitorsByDay[dateKey] || 0) + (m.unique_visitors || 0);
+
+          // Aggregate referrers
+          if (m.referrer_breakdown && typeof m.referrer_breakdown === 'object') {
+            for (const [source, count] of Object.entries(m.referrer_breakdown as Record<string, number>)) {
+              aggregatedReferrers[source] = (aggregatedReferrers[source] || 0) + (count || 0);
+            }
+          }
+
+          // Aggregate top pages
+          if (m.top_pages && Array.isArray(m.top_pages)) {
+            for (const page of m.top_pages as Array<{ slug: string; views: number }>) {
+              if (page.slug) {
+                aggregatedTopPages[page.slug] = (aggregatedTopPages[page.slug] || 0) + (page.views || 0);
+              }
+            }
+          }
+
+          // Aggregate devices
+          if (m.device_breakdown && typeof m.device_breakdown === 'object') {
+            for (const [device, count] of Object.entries(m.device_breakdown as Record<string, number>)) {
+              aggregatedDevices[device] = (aggregatedDevices[device] || 0) + (count || 0);
+            }
+          }
+
+          // Aggregate countries
+          if (m.country_breakdown && typeof m.country_breakdown === 'object') {
+            for (const [country, count] of Object.entries(m.country_breakdown as Record<string, number>)) {
+              aggregatedCountries[country] = (aggregatedCountries[country] || 0) + (count || 0);
+            }
+          }
         }
       }
     }
+
+    // Calculate averages
+    const avgBounceRate = bounceRateCount > 0 ? totalBounceRateSum / bounceRateCount : null;
+    const avgSessionDuration = sessionDurationCount > 0 ? Math.round(totalSessionDurationSum / sessionDurationCount) : null;
+
+    // Build chart data for the date range
+    const chartData: Array<{ date: string; pageViews: number; visitors: number }> = [];
+    const currentDate = new Date(startDate);
+    while (currentDate <= new Date()) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      chartData.push({
+        date: dateStr,
+        pageViews: pageViewsByDay[dateStr] || 0,
+        visitors: visitorsByDay[dateStr] || 0,
+      });
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // Sort and limit top pages
+    const topPages = Object.entries(aggregatedTopPages)
+      .map(([path, views]) => ({ path, views }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 10);
+
+    // Sort and format referrers
+    const referrers = Object.entries(aggregatedReferrers)
+      .map(([source, visits]) => ({ source, visits }))
+      .sort((a, b) => b.visits - a.visits)
+      .slice(0, 10);
+
+    // Format device breakdown
+    const devices = Object.entries(aggregatedDevices)
+      .map(([device, count]) => ({ device, count }))
+      .sort((a, b) => b.count - a.count);
+
+    // Format country breakdown
+    const countries = Object.entries(aggregatedCountries)
+      .map(([country, count]) => ({ country, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    // Calculate total referrer visits for percentage
+    const totalReferrerVisits = referrers.reduce((sum, r) => sum + r.visits, 0);
+    const referrersWithPercent = referrers.map(r => ({
+      ...r,
+      percent: totalReferrerVisits > 0 ? Math.round((r.visits / totalReferrerVisits) * 100) : 0,
+    }));
+
+    // Calculate total device count for percentage
+    const totalDeviceCount = devices.reduce((sum, d) => sum + d.count, 0);
+    const devicesWithPercent = devices.map(d => ({
+      ...d,
+      percent: totalDeviceCount > 0 ? Math.round((d.count / totalDeviceCount) * 100) : 0,
+    }));
 
     // Get storage usage
     const { data: assets } = await supabaseServer
@@ -98,11 +213,7 @@ export async function GET(req: NextRequest) {
       .gte('created_at', startOfMonth.toISOString());
 
     // Get website count
-    const { count: websiteCount } = await supabaseServer
-      .from('websites')
-      .select('*', { count: 'exact', head: true })
-      .eq('tenant_id', user.tenant_id)
-      .neq('status', 'archived');
+    const websiteCount = allWebsites?.length || 0;
 
     // Build alerts for usage approaching limits
     const plan = user.tenants.plans;
@@ -136,11 +247,36 @@ export async function GET(req: NextRequest) {
     }
 
     return jsonResponse({
-      pageViews: {
-        total: totalPageViews,
-        byDay: pageViewsByDay,
-        period: `${days} days`,
+      // Website list for dropdown
+      websitesList: allWebsites?.map(w => ({ id: w.id, name: w.name, subdomain: w.subdomain })) || [],
+      selectedWebsiteId: websiteId || 'all',
+      
+      // Overview metrics
+      overview: {
+        totalPageViews,
+        totalUniqueVisitors,
+        totalSessions,
+        avgBounceRate: avgBounceRate !== null ? Math.round(avgBounceRate * 10) / 10 : null,
+        avgSessionDuration,
+        period: days,
       },
+
+      // Chart data
+      chartData,
+
+      // Top pages
+      topPages,
+
+      // Traffic sources
+      referrers: referrersWithPercent,
+
+      // Device breakdown
+      devices: devicesWithPercent,
+
+      // Country breakdown
+      countries,
+
+      // Plan usage
       storage: {
         usedMb: Math.round(storageUsedMb * 100) / 100,
         limitMb: plan.storage_limit_mb,
@@ -157,6 +293,12 @@ export async function GET(req: NextRequest) {
         limit: plan.max_websites,
       },
       alerts,
+
+      // Legacy fields for backward compatibility
+      pageViews: {
+        total: totalPageViews,
+        chartData: chartData.map(d => ({ date: d.date, views: d.pageViews })),
+      },
     });
   } catch (err) {
     if (err instanceof ApiError) return err.toResponse();

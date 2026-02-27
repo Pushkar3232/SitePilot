@@ -42,7 +42,7 @@ export default function DropdownMenu({
       {isOpen && (
         <div
           className={cn(
-            "absolute top-full mt-1 z-50 min-w-[180px] bg-bg-white border border-border-light rounded-xl shadow-lg py-1",
+            "absolute top-full mt-1 z-50 min-w-45 bg-bg-white border border-border-light rounded-xl shadow-lg py-1",
             align === "end" ? "right-0" : "left-0"
           )}
         >

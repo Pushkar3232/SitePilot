@@ -24,7 +24,7 @@ function ToastItem({ toast }: { toast: ToastType }) {
   }, [toast, removeToast]);
 
   return (
-    <div className="flex items-start gap-3 bg-bg-white border border-border-light rounded-xl shadow-lg p-4 min-w-[300px] max-w-md">
+    <div className="flex items-start gap-3 bg-bg-white border border-border-light rounded-xl shadow-lg p-4 min-w-75 max-w-md">
       <div className="shrink-0 mt-0.5">{icons[toast.variant]}</div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-text-primary">{toast.title}</p>
@@ -48,7 +48,7 @@ export default function ToastContainer() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2">
+    <div className="fixed bottom-6 right-6 z-100 flex flex-col gap-2">
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} />
       ))}

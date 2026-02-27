@@ -360,33 +360,85 @@ export function useDeleteComponentApi(componentId: string, options?: UseApiMutat
 
 // --- Analytics ---
 
-interface AnalyticsDashboardResponse {
-  pageViews: {
-    total: number;
-    chartData: Array<{ date: string; views: number }>;
-  };
+interface AnalyticsWebsite {
+  id: string;
+  name: string;
+  subdomain: string;
+}
+
+interface AnalyticsOverview {
+  totalPageViews: number;
+  totalUniqueVisitors: number;
+  totalSessions: number;
+  avgBounceRate: number | null;
+  avgSessionDuration: number | null;
+  period: number;
+}
+
+interface AnalyticsChartPoint {
+  date: string;
+  pageViews: number;
+  visitors: number;
+}
+
+interface AnalyticsTopPage {
+  path: string;
+  views: number;
+}
+
+interface AnalyticsReferrer {
+  source: string;
+  visits: number;
+  percent: number;
+}
+
+interface AnalyticsDevice {
+  device: string;
+  count: number;
+  percent: number;
+}
+
+interface AnalyticsCountry {
+  country: string;
+  count: number;
+}
+
+export interface AnalyticsDashboardResponse {
+  websitesList: AnalyticsWebsite[];
+  selectedWebsiteId: string;
+  overview: AnalyticsOverview;
+  chartData: AnalyticsChartPoint[];
+  topPages: AnalyticsTopPage[];
+  referrers: AnalyticsReferrer[];
+  devices: AnalyticsDevice[];
+  countries: AnalyticsCountry[];
   storage: {
     usedMb: number;
     limitMb: number;
-    percent: number;
+    percentUsed: number;
   };
   aiCredits: {
     used: number;
     limit: number;
-    percent: number;
+    percentUsed: number;
+    resetsAt: string;
   };
   websites: {
     count: number;
     limit: number;
   };
-  alerts: {
-    storageWarning: boolean;
-    aiWarning: boolean;
+  alerts: Array<{ metric: string; used: number; limit: number; percentage: number }>;
+  // Legacy fields
+  pageViews: {
+    total: number;
+    chartData: Array<{ date: string; views: number }>;
   };
 }
 
-export function useAnalyticsDashboardApi(days: number = 30) {
-  return useApiQuery<AnalyticsDashboardResponse>(`/api/analytics/dashboard?days=${days}`);
+export function useAnalyticsDashboardApi(days: number = 30, websiteId?: string) {
+  const params = new URLSearchParams({ days: String(days) });
+  if (websiteId) params.set('websiteId', websiteId);
+  return useApiQuery<AnalyticsDashboardResponse>(`/api/analytics/dashboard?${params.toString()}`);
 }
 
 // --- Team ---
